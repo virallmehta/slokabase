@@ -1,0 +1,32 @@
+# Dependencies
+frontend/node_modules/
+
+# Build output
+dist/
+dist-ssr/
+build/
+
+# Environment variables
+frontend/
+#.env
+#.env.local
+#.env.*.local
+#!.env.example
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# docs
+docs/
+
+# workflows
+workflows/
