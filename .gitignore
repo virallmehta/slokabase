@@ -1,5 +1,7 @@
-# Dependencies
-frontend/node_modules/
+# Backend
+
+# Frontend
+frontend/
 
 # Build output
 dist/
@@ -29,4 +31,3 @@ Thumbs.db
 docs/
 
 # workflows
-workflows/
