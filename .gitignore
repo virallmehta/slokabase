@@ -1,9 +1,9 @@
 # Backend
 backend/node_modules/
-backend/.env.example
+#backend/.env.example
 
 # Frontend
-frontend/
+frontend/node_modules/
 
 # Build output
 dist/
@@ -11,7 +11,7 @@ dist-ssr/
 build/
 
 # Environment variables
-frontend/
+#frontend/
 #.env
 #.env.local
 #.env.*.local
