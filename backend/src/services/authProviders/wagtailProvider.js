@@ -54,7 +54,7 @@ export const wagtailProvider = {
         email: djangoUser.email || email,
         authProvider: 'wagtail',
         externalId: String(djangoUser.id),
-        role: djangoUser.is_staff || djangoUser.is_superuser ? 'admin' : 'user',
+        roleKey: djangoUser.is_staff || djangoUser.is_superuser ? 'admin' : 'member',
       });
     }
 

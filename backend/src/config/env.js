@@ -39,6 +39,28 @@ export const config = {
         refreshCookieName: process.env.REFRESH_COOKIE_NAME || 'refresh_token',
         csrfCookieName: process.env.CSRF_COOKIE_NAME || 'csrf_token',
         bcryptSaltRounds: Number(process.env.BCRYPT_SALT_ROUNDS) || 12,
+        passwordResetExpiresIn: process.env.PASSWORD_RESET_TOKEN_EXPIRES_IN || '1h',
+    },
+
+    rateLimit: {
+      authWindowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+      authMax: Number(process.env.AUTH_RATE_LIMIT_MAX) || 10,
+    },
+
+    email: {
+      // Defaults target Mailpit (https://mailpit.axllent.org/) running
+      // locally with `mailpit` or `docker run -p 1025:1025 -p 8025:8025
+      // axllent/mailpit` — no auth needed, view sent mail at
+      // http://localhost:8025. Swapping to a real provider (Resend,
+      // Brevo, SES, ...) later is just setting these env vars to that
+      // provider's SMTP credentials — emailService.js itself never
+      // changes.
+      host: process.env.EMAIL_HOST || 'localhost',
+      port: Number(process.env.EMAIL_PORT) || 1025,
+      secure: process.env.EMAIL_SECURE === 'true',
+      user: process.env.EMAIL_USER || undefined,
+      password: process.env.EMAIL_PASSWORD || undefined,
+      from: process.env.EMAIL_FROM || 'Slokabase <no-reply@slokabase.local>',
     },
 };
 

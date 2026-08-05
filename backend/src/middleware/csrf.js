@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { config } from '#config/env.js';
+import { parseDurationMs } from '#services/tokenService.js';
 import { ApiError } from '#utils/ApiError.js';
 
 /**
@@ -24,6 +25,9 @@ export function issueCsrfCookie(res) {
     secure: config.isProduction,
     sameSite: 'lax',
     path: '/',
+    // Reissued alongside the access token on every login/register/refresh
+    // (see auth.controller.js), so keep it on the same lifetime.
+    maxAge: parseDurationMs(config.auth.accessExpiresIn),
   });
   return token;
 }

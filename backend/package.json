@@ -1,5 +1,5 @@
 {
-  "name": "express-backend",
+  "name": "slokabase-backend",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -12,15 +12,16 @@
     "#controllers/*": "./src/controllers/*",
     "#services/*": "./src/services/*",
     "#utils/*": "./src/utils/*",
-    "#validators/*": "./src/validators/*"
+    "#validators/*": "./src/validators/*",
+    "#modules/*": "./modules/*"
   },
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "migrate": "knex migrate:latest",
-    "migrate:rollback": "knex migrate:rollback",
+    "migrate": "knex migrate:latest && node modules/migrate.js migrate",
+    "migrate:rollback": "node modules/migrate.js rollback && knex migrate:rollback",
     "migrate:make": "knex migrate:make",
-    "seed": "knex seed:run",
+    "seed": "knex seed:run && node modules/migrate.js seed",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -38,6 +39,7 @@
     "knex": "^3.1.0",
     "morgan": "^1.10.0",
     "mysql2": "^3.12.0",
+    "nodemailer": "^9.0.4",
     "pg": "^8.13.1",
     "uuid": "^11.0.5",
     "zod": "^3.24.1"

@@ -10,13 +10,14 @@ export async function seed(knex) {
   const existing = await knex('users').where({ email }).first();
   if (existing) return;
 
+  const adminRole = await knex('roles').where({ key: 'admin' }).first();
   const passwordHash = await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD || 'ChangeMe123!', 12);
 
   await knex('users').insert({
     name: 'Admin',
     email,
     password_hash: passwordHash,
-    role: 'admin',
+    role_id: adminRole.id,
     auth_provider: 'local',
   });
 

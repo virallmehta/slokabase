@@ -4,9 +4,14 @@ import { v4 as uuid } from 'uuid';
 import { config } from '#config/env.js';
 import { db } from '#db/knex.js';
 
-/** Signs a short-lived access token carrying the user's id and role. */
+/**
+ * Signs a short-lived access token carrying only the user's id. Role and
+ * permissions are deliberately NOT embedded — they're fetched fresh from
+ * the DB on every request (see middleware/authorize.js), so a role change
+ * takes effect immediately instead of waiting up to accessExpiresIn.
+ */
 export function signAccessToken(user) {
-  return jwt.sign({ sub: user.id, role: user.role }, config.auth.accessSecret, {
+  return jwt.sign({ sub: user.id }, config.auth.accessSecret, {
     expiresIn: config.auth.accessExpiresIn,
   });
 }
@@ -17,13 +22,19 @@ export function verifyAccessToken(token) {
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
-function expiryDate(durationString) {
-  // Supports simple "Nd"/"Nh"/"Nm" formats used in JWT_REFRESH_EXPIRES_IN.
+// Supports simple "Nd"/"Nh"/"Nm" formats used in JWT_ACCESS_EXPIRES_IN /
+// JWT_REFRESH_EXPIRES_IN — also used by auth.controller.js/csrf.js to keep
+// cookie maxAge in sync with the JWT's own expiry instead of defaulting to
+// a browser-session cookie.
+export function parseDurationMs(durationString) {
   const match = /^(\d+)([dhm])$/.exec(durationString);
   const amount = match ? Number(match[1]) : 30;
   const unit = match ? match[2] : 'd';
-  const ms = { d: 86400000, h: 3600000, m: 60000 }[unit] * amount;
-  return new Date(Date.now() + ms);
+  return { d: 86400000, h: 3600000, m: 60000 }[unit] * amount;
+}
+
+function expiryDate(durationString) {
+  return new Date(Date.now() + parseDurationMs(durationString));
 }
 
 /**
@@ -82,4 +93,44 @@ export async function revokeAllUserSessions(userId) {
   await db('refresh_tokens').where({ user_id: userId, revoked_at: null }).update({
     revoked_at: db.fn.now(),
   });
+}
+
+/**
+ * Issues a forgot-password reset token, storing only its hash (same
+ * pattern as issueRefreshToken above) with a short expiry
+ * (config.auth.passwordResetExpiresIn, default 1h). Any of the user's
+ * still-usable previous reset tokens are invalidated first, so at most one
+ * reset link is ever valid at a time — an old, un-clicked email can't be
+ * used after a newer forgot-password request superseded it.
+ */
+export async function issuePasswordResetToken(userId) {
+  await db('password_reset_tokens')
+    .where({ user_id: userId, used_at: null })
+    .update({ used_at: db.fn.now() });
+
+  const token = crypto.randomBytes(32).toString('hex');
+  await db('password_reset_tokens').insert({
+    user_id: userId,
+    token_hash: hashToken(token),
+    expires_at: expiryDate(config.auth.passwordResetExpiresIn),
+  });
+  return token;
+}
+
+/**
+ * Validates a presented reset token and, if valid, marks it used in the
+ * same call — a token is single-use regardless of whether the caller goes
+ * on to actually change the password. Mirrors rotateRefreshToken's
+ * { valid, reason } shape.
+ */
+export async function consumePasswordResetToken(presentedToken) {
+  const tokenHash = hashToken(presentedToken);
+  const record = await db('password_reset_tokens').where({ token_hash: tokenHash }).first();
+
+  if (!record) return { valid: false, reason: 'not-found' };
+  if (record.used_at) return { valid: false, reason: 'used' };
+  if (new Date(record.expires_at) < new Date()) return { valid: false, reason: 'expired' };
+
+  await db('password_reset_tokens').where({ id: record.id }).update({ used_at: db.fn.now() });
+  return { valid: true, userId: record.user_id };
 }

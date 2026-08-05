@@ -1,21 +1,33 @@
+import { db } from '#db/knex.js';
 import { ApiError } from '#utils/ApiError.js';
+import { asyncHandler } from '#utils/asyncHandler.js';
 
 /**
- * Simple role-based access control. Usage:
- *   router.delete('/users/:id', authenticate, authorize('admin'), handler)
+ * Permission-based access control. Usage:
+ *   router.delete('/users/:id', authenticate, authorize('users:delete'), handler)
  *
- * This is intentionally minimal (one role per user, checked against an
- * allow-list per route) — enough for most apps. If you need finer-grained
- * permissions (e.g. "can_edit_billing" independent of role), add a
- * `permissions` table and a `hasPermission()` check here instead; nothing
- * else in the app needs to change since routes only ever call `authorize`.
+ * Loads the caller's permissions fresh from the DB on every request (via
+ * users -> role_permissions -> permissions) rather than trusting anything
+ * embedded in the access token, so a permission/role change takes effect
+ * on the next request instead of waiting for the token to expire.
+ * Requires ALL listed permission keys to be present (AND, not OR).
  */
-export function authorize(...allowedRoles) {
-  return (req, res, next) => {
+export function authorize(...requiredPermissions) {
+  return asyncHandler(async (req, res, next) => {
     if (!req.user) return next(ApiError.unauthorized());
-    if (!allowedRoles.includes(req.user.role)) {
+
+    const granted = await db('role_permissions')
+      .join('permissions', 'permissions.id', 'role_permissions.permission_id')
+      .join('users', 'users.role_id', 'role_permissions.role_id')
+      .where('users.id', req.user.id)
+      .pluck('permissions.key');
+
+    const missing = requiredPermissions.filter((perm) => !granted.includes(perm));
+    if (missing.length > 0) {
       return next(ApiError.forbidden('You do not have permission to perform this action'));
     }
+
+    req.user.permissions = granted;
     next();
-  };
+  });
 }

@@ -13,7 +13,7 @@ export const localProvider = {
     if (existing) throw ApiError.conflict('An account with this email already exists');
 
     const passwordHash = await hashPassword(password);
-    const user = await userRepository.create({ name, email, passwordHash, role: 'user' });
+    const user = await userRepository.create({ name, email, passwordHash, roleKey: 'member' });
     return { user };
   },
 

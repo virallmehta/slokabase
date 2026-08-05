@@ -57,7 +57,7 @@ export const wordpressProvider = {
         email: wpUser.email || email,
         authProvider: 'wordpress',
         externalId: String(wpUser.id),
-        role: wpUser.roles?.includes('administrator') ? 'admin' : 'user',
+        roleKey: wpUser.roles?.includes('administrator') ? 'admin' : 'member',
       });
     }
 
