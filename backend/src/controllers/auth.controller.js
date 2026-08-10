@@ -28,8 +28,13 @@ import { toPublicUser as publicUser } from '#utils/publicUser.js';
 // *Options variants below, used solely for issuing cookies.
 const accessCookieBaseOptions = {
   httpOnly: true,
+  // Frontend and backend are on different Vercel domains in production, so
+  // the auth cookies are cross-origin there — that requires sameSite: 'none'
+  // (which in turn requires secure: true, browsers reject 'none' otherwise).
+  // Locally frontend/backend share an origin, where 'none' is unnecessary
+  // and secure: true would break cookies over plain http.
   secure: config.isProduction,
-  sameSite: 'lax',
+  sameSite: config.isProduction ? 'none' : 'lax',
   path: '/',
 };
 

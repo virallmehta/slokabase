@@ -22,8 +22,11 @@ export function issueCsrfCookie(res) {
   const token = crypto.randomBytes(32).toString('hex');
   res.cookie(config.auth.csrfCookieName, token, {
     httpOnly: false, // must be readable by client JS to echo back in a header
+    // Cross-origin in production (frontend/backend on different Vercel
+    // domains) requires sameSite: 'none' + secure: true; same-origin locally
+    // keeps 'lax' since 'none' would be unnecessary there.
     secure: config.isProduction,
-    sameSite: 'lax',
+    sameSite: config.isProduction ? 'none' : 'lax',
     path: '/',
     // Reissued alongside the access token on every login/register/refresh
     // (see auth.controller.js), so keep it on the same lifetime.
