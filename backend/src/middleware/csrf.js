@@ -27,6 +27,9 @@ export function issueCsrfCookie(res) {
     // keeps 'lax' since 'none' would be unnecessary there.
     secure: config.isProduction,
     sameSite: config.isProduction ? 'none' : 'lax',
+    // See accessCookieBaseOptions in auth.controller.js for why this is
+    // needed (Chrome CHIPS) and its limits (no effect on Safari ITP).
+    partitioned: config.isProduction,
     path: '/',
     // Reissued alongside the access token on every login/register/refresh
     // (see auth.controller.js), so keep it on the same lifetime.

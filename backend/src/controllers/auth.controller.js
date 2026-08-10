@@ -35,6 +35,11 @@ const accessCookieBaseOptions = {
   // and secure: true would break cookies over plain http.
   secure: config.isProduction,
   sameSite: config.isProduction ? 'none' : 'lax',
+  // Chrome's CHIPS requires this for a sameSite: 'none' cookie to be
+  // accepted cross-site at all; only valid alongside secure, so gate the
+  // same way. Note: Safari has no CHIPS support, so this doesn't affect
+  // Safari's third-party cookie blocking either way.
+  partitioned: config.isProduction,
   path: '/',
 };
 
