@@ -38,6 +38,7 @@ function buildConnection() {
           user: config.db.user,
           password: config.db.password,
           database: config.db.name,
+           ...(config.db.ssl && { ssl: { rejectUnauthorized: false } }),
         },
         pool: { min: 2, max: 10 },
       };

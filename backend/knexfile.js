@@ -36,6 +36,7 @@ function buildConnection() {
           user: process.env.DB_USER || 'postgres',
           password: process.env.DB_PASSWORD || '',
           database: process.env.DB_NAME || 'app_db',
+          ...(process.env.DB_SSL === 'true' && { ssl: { rejectUnauthorized: false } }),
         },
       };
     default:
