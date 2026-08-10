@@ -27,6 +27,8 @@ export const config = {
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD || '',
       name: process.env.DB_NAME || 'app_db',
+      ssl: process.env.DB_SSL === 'true',   // ← add this line
+
     },
 
     auth: {
