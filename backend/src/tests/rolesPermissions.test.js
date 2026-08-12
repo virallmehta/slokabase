@@ -215,7 +215,14 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
     const permsRes = await adminAgent.get(`/api/v1/admin/roles/${memberRoleId}/permissions`).expect(200);
     const allPermissions = permsRes.body.groups.flatMap((g) => g.permissions);
     const systemKeys = allPermissions.filter((p) => p.isSystem).map((p) => p.key).sort();
-    expect(systemKeys).toEqual(['roles:manage', 'settings:manage', 'users:delete', 'users:read', 'users:write']);
+    expect(systemKeys).toEqual([
+      'audit:read',
+      'roles:manage',
+      'settings:manage',
+      'users:delete',
+      'users:read',
+      'users:write',
+    ]);
   });
 
   describe('custom roles: create, rename, delete', () => {

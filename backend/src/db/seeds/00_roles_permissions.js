@@ -33,9 +33,10 @@ export async function seed(knex) {
     { key: 'users:delete', description: 'Delete users', is_system: true },
     { key: 'roles:manage', description: 'Manage roles and permissions', is_system: true },
     { key: 'settings:manage', description: 'View and change application settings', is_system: true },
+    { key: 'audit:read', description: 'View the system audit log', is_system: true },
   ];
   const baseRolePermissions = {
-    admin: ['users:read', 'users:write', 'users:delete', 'roles:manage', 'settings:manage'],
+    admin: ['users:read', 'users:write', 'users:delete', 'roles:manage', 'settings:manage', 'audit:read'],
     manager: ['users:read', 'users:write'],
     member: [],
   };
