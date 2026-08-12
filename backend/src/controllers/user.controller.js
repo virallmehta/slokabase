@@ -176,7 +176,7 @@ export const getUserRelatedSales = asyncHandler(async (req, res) => {
   if (!existing) throw ApiError.notFound('User not found');
 
   try {
-    const { saleRepository } = await import('#modules/sales/repository.js');
+    const { saleRepository } = await import('#modules/example-sales/repository.js');
     const sales = await saleRepository.findByCreatedBy(req.params.id);
     res.json({ sales });
   } catch {

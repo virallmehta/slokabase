@@ -53,7 +53,7 @@ router.get('/:id/audit-logs', authenticate, authorize('users:read'), userControl
 router.get(
   '/:id/related-sales',
   authenticate,
-  authorize('users:read', 'sales:read'),
+  authorize('users:read', 'example-sales:read'),
   userController.getUserRelatedSales
 );
 router.patch(
