@@ -165,7 +165,7 @@ export const getUserAuditLogs = asyncHandler(async (req, res) => {
 
 /**
  * "Related records" for the detail page's right rail — sales this user
- * has recorded (sales.created_by -> users.id, see modules/sales). Reaches
+ * has recorded (sales.created_by -> users.id, see modules/example-sales). Reaches
  * into a feature module from core, which is a deliberate, narrow
  * exception to the usual module boundary; tolerant of the module being
  * absent (returns an empty list) rather than crashing, so Users doesn't

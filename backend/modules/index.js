@@ -5,8 +5,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 /**
  * Runtime module registry — plug-and-play modular architecture.
  *
- * Each subdirectory here (`products/`, `sales/`, ...) is a fully
- * self-contained feature module: its own config.js (key, basePath,
+ * Each subdirectory here (e.g. `example-products/`, `example-sales/`) is a
+ * fully self-contained feature module: its own config.js (key, basePath,
  * permissions, rolePermissions, menu), migrations/, repository, controller,
  * validators, and routes. Nothing in src/db or app.js needs to be touched
  * to add or remove one — app.js loops this registry to mount routes,

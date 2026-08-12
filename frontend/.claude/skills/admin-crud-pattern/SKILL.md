@@ -10,7 +10,7 @@ Two reference implementations exist and must stay in sync with each other:
 - **List + detail**: `src/pages/admin/UsersListPage.tsx` / `UserDetailPage.tsx` — the original.
 - **List + detail**: `src/pages/admin/RolesListPage.tsx` / `RoleDetailPage.tsx` — the second, verified-against-this-checklist instance (added after the first Roles list shipped without several of these elements and had to be rebuilt).
 
-`Products`/`Sales` currently have **no dedicated frontend pages** — the sidebar links to them via the dynamic `GET /api/menu`-driven catch-all (`PlaceholderPage`), per `backend/modules/products|sales`. If you build real pages for them, follow this same pattern.
+`Products`/`Sales` currently have **no dedicated frontend pages** — the sidebar links to them via the dynamic `GET /api/menu`-driven catch-all (`PlaceholderPage`), per `backend/modules/example-products|example-sales`. If you build real pages for them, follow this same pattern.
 
 ## Why this exists
 
@@ -35,7 +35,7 @@ Every admin list page needs all of these, not a subset:
 ## Detail view checklist
 
 - [ ] Header row: "Back to X" ghost button above it; title (+ a status/type `Badge` if the entity has one) on the left; action buttons on the right — **Delete** (if the specific row is deletable) before **Save**.
-- [ ] Delete condition must be a real guard, not just "button exists": e.g. `UserDetailPage` hides Delete for `currentUser.id === user.id`; `RoleDetailPage` hides it for system roles (`role.is_system`). Whatever the condition is, the **backend must enforce the same rule independently** — never rely on the frontend hiding a button as the only protection (see `backend/modules/roles/controller.js`'s `deleteRole`/`updateRole` guards).
+- [ ] Delete condition must be a real guard, not just "button exists": e.g. `UserDetailPage` hides Delete for `currentUser.id === user.id`; `RoleDetailPage` hides it for system roles (`role.is_system`). Whatever the condition is, the **backend must enforce the same rule independently** — never rely on the frontend hiding a button as the only protection (see `backend/src/controllers/role.controller.js`'s `deleteRole`/`updateRole` guards).
 - [ ] Save/error state as `Alert`s directly above the form: a destructive `Alert` for `saveError`/`deleteError`, a default `Alert` for a `saved` confirmation. Both `UserDetailPage` and `RoleDetailPage` use this exact pattern — don't substitute a toast library (none is installed; see `frontend/CLAUDE.md`).
 - [ ] **A create flow needs the same confirmation a save does.** Don't let "New X" silently redirect with no acknowledgement — either show the same kind of saved `Alert` after redirecting into the new record's own detail page (`RoleDetailPage` does this via `navigate(path, { state: { justCreated: true } })`, consumed in a one-shot `useEffect` keyed on `location`), or redirect back to the list. Silence is not confirmation.
 - [ ] Read-only fields (a value the user can see but not this page can't edit) use the `readOnly` HTML attribute, **not** `disabled`. `disabled` triggers `Input`'s built-in opacity/background fade (`disabled:opacity-50 disabled:bg-input/50`), which reads as low-contrast/broken rather than intentionally locked. `readOnly` keeps full border/background contrast while still blocking edits.

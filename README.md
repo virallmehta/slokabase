@@ -143,7 +143,7 @@ Visit `http://localhost:5173`, sign in with the seeded admin credentials, and yo
 
 ## Adding your own module
 
-A new domain area (e.g. "Invoices") is a folder under `backend/modules/invoices/` with a manifest, routes, a controller, a repository built on the shared audit-logging wrapper, validators, and its own migrations — nothing to register by hand. `backend/.claude/skills/module-registry-pattern/SKILL.md` is the full checklist; `backend/modules/products/` and `backend/modules/sales/` are working examples to copy. Add a corresponding frontend list/detail page pair following `frontend/.claude/skills/admin-crud-pattern/SKILL.md` and `frontend/DESIGN.md`, and it's a fully integrated part of the admin — sidebar entry, permissions, and audit trail included.
+A new domain area (e.g. "Invoices") is a folder under `backend/modules/invoices/` with a manifest, routes, a controller, a repository built on the shared audit-logging wrapper, validators, and its own migrations — nothing to register by hand. `backend/.claude/skills/module-registry-pattern/SKILL.md` is the full checklist; `backend/modules/example-products/` and `backend/modules/example-sales/` are working examples to copy. Add a corresponding frontend list/detail page pair following `frontend/.claude/skills/admin-crud-pattern/SKILL.md` and `frontend/DESIGN.md`, and it's a fully integrated part of the admin — sidebar entry, permissions, and audit trail included.
 
 ## Testing
 
