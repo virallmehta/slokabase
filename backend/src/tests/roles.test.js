@@ -7,9 +7,9 @@ import { resetDatabase } from './testDb.js';
 // feature module) plus every module's registered permissions and its own
 // rolePermissions map — this is what 00_roles_permissions.js is expected
 // to seed in total. See src/db/seeds/00_roles_permissions.js.
-const basePermissionKeys = ['roles:manage', 'users:delete', 'users:read', 'users:write'];
+const basePermissionKeys = ['roles:manage', 'settings:manage', 'users:delete', 'users:read', 'users:write'];
 const baseRolePermissions = {
-  admin: ['users:read', 'users:write', 'users:delete', 'roles:manage'],
+  admin: ['users:read', 'users:write', 'users:delete', 'roles:manage', 'settings:manage'],
   manager: ['users:read', 'users:write'],
   member: [],
 };

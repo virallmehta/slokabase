@@ -3,8 +3,8 @@
  * columns (no `app_name`/`support_email`/... columns of their own), so a
  * new setting is a seed-data row, not a migration. `type` drives how
  * `value` (always stored as text) gets cast back on read (see
- * repository.js's `castValue`); `category` groups settings in the admin
- * UI (see modules/settings/seeds/01_settings.js for the starter set).
+ * settingsRepository.js's `castValue`); `category` groups settings in the
+ * admin UI (see src/db/seeds/02_settings.js for the starter set).
  *
  * @param { import("knex").Knex } knex
  */
