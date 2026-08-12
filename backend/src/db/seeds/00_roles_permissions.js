@@ -6,13 +6,16 @@ import modules from '#modules/index.js';
  * that table were ever truncated), then seeds the starter permission set
  * and role -> permission mappings.
  *
- * Feature modules (backend/modules/<name>/config.js) each register their
- * own `permissions` array and a `rolePermissions` map saying which of the
+ * Core infrastructure (Users, Roles, Settings, Audit Log) has its
+ * permissions declared directly in basePermissions/baseRolePermissions
+ * below. Optional feature modules (backend/modules/<name>/config.js —
+ * currently example-products/example-sales) each register their own
+ * `permissions` array and a `rolePermissions` map saying which of the
  * core roles (admin/manager/member) get which of those permissions —
  * modules only grant onto the existing role set, they never define new
- * roles. Both are merged in here alongside the base RBAC permissions, so a
- * new module's permissions get seeded automatically with no edits needed
- * to this file.
+ * roles. Both are merged in here alongside the base set, so a new
+ * module's permissions get seeded automatically with no edits needed to
+ * this file.
  *
  * @param { import("knex").Knex } knex
  */
