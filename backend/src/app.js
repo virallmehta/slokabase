@@ -13,7 +13,7 @@ import { db } from './db/knex.js';
 import authRouter from '#routes/auth.routes.js';
 import leadsRouter from '#routes/lead.routes.js';
 import userRouter from '#routes/user.routes.js';
-import roleRouter from '#routes/role.routes.js';
+import { roleRouter, roleAdminRouter } from '#routes/role.routes.js';
 import menuRouter from '#routes/menu.routes.js';
 import modules from '#modules/index.js';
 
@@ -56,6 +56,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/leads', leadsRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/roles', roleRouter);
+app.use('/api/v1/admin/roles', roleAdminRouter);
 app.use('/api/menu', menuRouter);
 
 // Feature modules (backend/modules/<name>/) are mounted here in one loop
