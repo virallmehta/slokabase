@@ -8,12 +8,12 @@ import { createProductSchema, updateProductSchema } from './validators.js';
 
 const router = Router();
 
-router.get('/', authenticate, authorize('products:read'), productController.listProducts);
-router.get('/:id', authenticate, authorize('products:read'), productController.getProduct);
+router.get('/', authenticate, authorize('example-products:read'), productController.listProducts);
+router.get('/:id', authenticate, authorize('example-products:read'), productController.getProduct);
 router.post(
   '/',
   authenticate,
-  authorize('products:write'),
+  authorize('example-products:write'),
   verifyCsrfToken,
   validateBody(createProductSchema),
   productController.createProduct
@@ -21,7 +21,7 @@ router.post(
 router.patch(
   '/:id',
   authenticate,
-  authorize('products:write'),
+  authorize('example-products:write'),
   verifyCsrfToken,
   validateBody(updateProductSchema),
   productController.updateProduct
@@ -29,7 +29,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
-  authorize('products:delete'),
+  authorize('example-products:delete'),
   verifyCsrfToken,
   productController.deleteProduct
 );
