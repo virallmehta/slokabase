@@ -1,6 +1,5 @@
 # Backend
 backend/node_modules/
-#backend/.env.example
 
 # Frontend
 frontend/node_modules/
@@ -10,12 +9,13 @@ dist/
 dist-ssr/
 build/
 
-# Environment variables
-#frontend/
-#.env
-#.env.local
-#.env.*.local
-#!.env.example
+# Environment variables — real values never committed, templates always are
+.env
+.env.local
+.env.production
+.env.*.local
+!.env.example
+!.env.production.example
 
 # Editor / OS
 .vscode/*
@@ -31,5 +31,3 @@ Thumbs.db
 
 # docs
 docs/
-
-# workflows
