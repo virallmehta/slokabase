@@ -80,7 +80,7 @@ describe('System Audit Log module — /api/v1/admin/audit-logs', () => {
     await adminAgent
       .put(`/api/v1/admin/roles/${customRoleId}/permissions`)
       .set('X-CSRF-Token', adminCsrf)
-      .send({ permissionKeys: ['users:read', 'products:read'] })
+      .send({ permissionKeys: ['users:read', 'example-products:read'] })
       .expect(200);
   });
 
@@ -132,7 +132,7 @@ describe('System Audit Log module — /api/v1/admin/audit-logs', () => {
     const entry = res.body.logs.find((l) => l.entity_id === String(customRoleId));
     expect(entry).toBeTruthy();
     expect(entry.changes.permissions.from.sort()).toEqual(['users:read']);
-    expect(entry.changes.permissions.to.sort()).toEqual(['products:read', 'users:read']);
+    expect(entry.changes.permissions.to.sort()).toEqual(['example-products:read', 'users:read']);
   });
 
   it('filters by actor', async () => {

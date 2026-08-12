@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { db } from '#db/knex.js';
-import { settingsRepository, castValue } from '#modules/settings/repository.js';
+import { settingsRepository, castValue } from '#services/settingsRepository.js';
 import { resetDatabase } from './testDb.js';
 
 // Unit-level tests against the repository directly (no HTTP layer) — see
 // src/tests/settings.test.js for the API-level auth/validation coverage.
 // These focus specifically on the get/set/cache-invalidation logic itself.
-describe('settingsRepository (backend/modules/settings/repository.js)', () => {
+describe('settingsRepository (backend/src/services/settingsRepository.js)', () => {
   beforeEach(async () => {
     await resetDatabase();
     // resetDatabase() re-seeds the table but doesn't know about this

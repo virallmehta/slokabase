@@ -103,7 +103,7 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
     const res = await adminAgent.get(`/api/v1/admin/roles/${memberRoleId}/permissions`).expect(200);
 
     const moduleNames = res.body.groups.map((g) => g.module).sort();
-    expect(moduleNames).toEqual(['Audit', 'Products', 'Roles', 'Sales', 'Settings', 'Users']);
+    expect(moduleNames).toEqual(['Audit', 'Example Products', 'Example Sales', 'Roles', 'Settings', 'Users']);
 
     // member starts with no permissions granted at all
     const allPermissions = res.body.groups.flatMap((g) => g.permissions);
@@ -114,7 +114,7 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
     const res = await adminAgent.get('/api/v1/admin/roles/permissions/catalog').expect(200);
 
     const moduleNames = res.body.groups.map((g) => g.module).sort();
-    expect(moduleNames).toEqual(['Audit', 'Products', 'Roles', 'Sales', 'Settings', 'Users']);
+    expect(moduleNames).toEqual(['Audit', 'Example Products', 'Example Sales', 'Roles', 'Settings', 'Users']);
 
     const allPermissions = res.body.groups.flatMap((g) => g.permissions);
     expect(allPermissions.every((p) => p.granted === false)).toBe(true);
@@ -149,7 +149,7 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
     const res = await adminAgent
       .put(`/api/v1/admin/roles/${memberRoleId}/permissions`)
       .set('X-CSRF-Token', adminCsrf)
-      .send({ permissionKeys: ['users:read', 'products:read'] })
+      .send({ permissionKeys: ['users:read', 'example-products:read'] })
       .expect(200);
 
     const granted = res.body.groups
@@ -157,41 +157,41 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
       .filter((p) => p.granted)
       .map((p) => p.key)
       .sort();
-    expect(granted).toEqual(['products:read', 'users:read']);
+    expect(granted).toEqual(['example-products:read', 'users:read']);
   });
 
   it('revokes a previously granted permission (toggling off) while keeping the other', async () => {
     const res = await adminAgent
       .put(`/api/v1/admin/roles/${memberRoleId}/permissions`)
       .set('X-CSRF-Token', adminCsrf)
-      .send({ permissionKeys: ['products:read'] })
+      .send({ permissionKeys: ['example-products:read'] })
       .expect(200);
 
     const granted = res.body.groups
       .flatMap((g) => g.permissions)
       .filter((p) => p.granted)
       .map((p) => p.key);
-    expect(granted).toEqual(['products:read']);
+    expect(granted).toEqual(['example-products:read']);
 
     const dbKeys = await db('role_permissions')
       .join('permissions', 'permissions.id', 'role_permissions.permission_id')
       .where('role_permissions.role_id', memberRoleId)
       .pluck('permissions.key');
-    expect(dbKeys).toEqual(['products:read']);
+    expect(dbKeys).toEqual(['example-products:read']);
   });
 
   it('a manager promoted with a new permission gains access on their very next request', async () => {
-    // managerRoleId currently has no products:write — grant it, then confirm
+    // managerRoleId currently has no example-products:write — grant it, then confirm
     // the already-logged-in manager agent (whose JWT has no permissions
     // baked in) can use it immediately, with no re-login required.
     await adminAgent
       .put(`/api/v1/admin/roles/${managerRoleId}/permissions`)
       .set('X-CSRF-Token', adminCsrf)
-      .send({ permissionKeys: ['users:read', 'users:write', 'products:read', 'products:write'] })
+      .send({ permissionKeys: ['users:read', 'users:write', 'example-products:read', 'example-products:write'] })
       .expect(200);
 
     await managerAgent
-      .post('/api/v1/products')
+      .post('/api/v1/example-products')
       .set('X-CSRF-Token', managerCsrf)
       .send({ name: 'Manager Widget', sku: 'MGR-1', price: 1 })
       .expect(201);
@@ -252,7 +252,7 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
         .send({
           name: 'Support Agent',
           description: 'Read-only support access',
-          permissionKeys: ['users:read', 'products:read'],
+          permissionKeys: ['users:read', 'example-products:read'],
         })
         .expect(201);
 
@@ -267,7 +267,7 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
         .filter((p) => p.granted)
         .map((p) => p.key)
         .sort();
-      expect(granted).toEqual(['products:read', 'users:read']);
+      expect(granted).toEqual(['example-products:read', 'users:read']);
       customRoleId = res.body.role.id;
     });
 

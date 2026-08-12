@@ -235,15 +235,15 @@ describe('Users module — create/delete/audit-logs/related-sales', () => {
   });
 
   describe('GET /api/v1/users/:id/related-sales', () => {
-    it("returns sales the user has recorded, gated by users:read + sales:read", async () => {
+    it("returns sales the user has recorded, gated by users:read + example-sales:read", async () => {
       const productRes = await adminAgent
-        .post('/api/v1/products')
+        .post('/api/v1/example-products')
         .set('X-CSRF-Token', adminCsrf)
         .send({ name: 'Widget', sku: 'AUD-1', price: 10, stock: 100 })
         .expect(201);
 
       await adminAgent
-        .post('/api/v1/sales')
+        .post('/api/v1/example-sales')
         .set('X-CSRF-Token', adminCsrf)
         .send({ productId: productRes.body.product.id, quantity: 2, unitPrice: 10 })
         .expect(201);
@@ -255,7 +255,7 @@ describe('Users module — create/delete/audit-logs/related-sales', () => {
       expect(res.body.sales.some((s) => s.product_name === 'Widget')).toBe(true);
     });
 
-    it('denies a member (lacks users:read and sales:read)', async () => {
+    it('denies a member (lacks users:read and example-sales:read)', async () => {
       const memberAgent = request.agent(app);
       await memberAgent
         .post('/api/v1/auth/register')

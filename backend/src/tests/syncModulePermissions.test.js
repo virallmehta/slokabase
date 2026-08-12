@@ -14,16 +14,16 @@ describe('syncModulePermissions (backend/modules/syncPermissions.js)', () => {
     // Simulate an environment that hasn't re-seeded since a module added a
     // new permission: delete one that the seed already put there.
     await db('role_permissions')
-      .whereIn('permission_id', db('permissions').select('id').where({ key: 'sales:delete' }))
+      .whereIn('permission_id', db('permissions').select('id').where({ key: 'example-sales:delete' }))
       .del();
-    await db('permissions').where({ key: 'sales:delete' }).del();
+    await db('permissions').where({ key: 'example-sales:delete' }).del();
 
-    let permission = await db('permissions').where({ key: 'sales:delete' }).first();
+    let permission = await db('permissions').where({ key: 'example-sales:delete' }).first();
     expect(permission).toBeUndefined();
 
     await syncModulePermissions();
 
-    permission = await db('permissions').where({ key: 'sales:delete' }).first();
+    permission = await db('permissions').where({ key: 'example-sales:delete' }).first();
     expect(permission).toBeTruthy();
     expect(permission.description).toBe('Delete sales');
 
