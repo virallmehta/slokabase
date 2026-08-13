@@ -102,7 +102,7 @@ Products and Sales have **no frontend pages at all** (backend modules only, side
 - **No Back button**: a Back button implies "you arrived here from a list of these." Settings isn't a record among many of its kind — it's a direct sidebar destination (same class of page as Profile), so there's no list to go back to.
 - **No status badge**: badges communicate a per-record state (Users' active/suspended, Roles' System) — there is no analogous per-record state for a settings form.
 - **No Delete**: nothing in a settings form is a deletable row; each field is a fixed key the seed defines, edited in place, never removed.
-- **No right rail**: Metadata/Activity log/Related records all describe *a specific record's* history and relationships. A settings form isn't one record — each field already carries its own `updated_by`/`updated_at` (see `backend/modules/settings/`'s `app_settings` table), which is the per-field equivalent of a Metadata card, shown inline rather than in a separate rail.
+- **No right rail**: Metadata/Activity log/Related records all describe *a specific record's* history and relationships. A settings form isn't one record — each field already carries its own `updated_by`/`updated_at` (see `backend/src/services/settingsRepository.js`'s `app_settings` table), which is the per-field equivalent of a Metadata card, shown inline rather than in a separate rail.
 
 **This exception applies only to pages that are a single configuration/preferences form with no enclosing list** — it does not relax the checklist for Users, Roles, or any entity a user creates multiple of. State the reasoning explicitly in that page's code (the way `SettingsPage.tsx` does) rather than silently omitting the elements.
 

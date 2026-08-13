@@ -45,8 +45,8 @@ describe('GET /api/menu', () => {
       {
         group: 'Catalog',
         items: [
-          expect.objectContaining({ key: 'products', label: 'Products', order: 10 }),
-          expect.objectContaining({ key: 'sales', label: 'Sales', order: 20 }),
+          expect.objectContaining({ key: 'example-products', label: 'Example Products', order: 10 }),
+          expect.objectContaining({ key: 'example-sales', label: 'Example Sales', order: 20 }),
         ],
       },
     ]);
@@ -65,7 +65,7 @@ describe('GET /api/menu', () => {
 
   it('only shows menu items the caller holds the requiredPermission for', async () => {
     const memberRole = await db('roles').where({ key: 'member' }).first();
-    const productsRead = await db('permissions').where({ key: 'products:read' }).first();
+    const productsRead = await db('permissions').where({ key: 'example-products:read' }).first();
     await db('role_permissions').insert({ role_id: memberRole.id, permission_id: productsRead.id });
 
     const agent = request.agent(app);
@@ -78,7 +78,7 @@ describe('GET /api/menu', () => {
     expect(res.body.menu).toEqual([
       {
         group: 'Catalog',
-        items: [expect.objectContaining({ key: 'products' })],
+        items: [expect.objectContaining({ key: 'example-products' })],
       },
     ]);
   });

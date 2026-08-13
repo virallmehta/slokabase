@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import * as auditLogController from './controller.js';
+import * as auditLogController from '#controllers/auditLog.controller.js';
 import { authenticate } from '#middleware/authenticate.js';
 import { authorize } from '#middleware/authorize.js';
 import { validate } from '#middleware/validate.js';
-import { listAuditLogsSchema } from './validators.js';
+import { listAuditLogsSchema } from '#validators/auditLog.validators.js';
 
 const router = Router();
 

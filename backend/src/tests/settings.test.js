@@ -6,7 +6,7 @@ process.env.AUTH_RATE_LIMIT_MAX = '50';
 const { app } = await import('../app.js');
 const { db } = await import('#db/knex.js');
 const { resetDatabase } = await import('./testDb.js');
-const { settingsRepository } = await import('#modules/settings/repository.js');
+const { settingsRepository } = await import('#services/settingsRepository.js');
 
 function csrfFrom(res) {
   const cookies = res.headers['set-cookie'];

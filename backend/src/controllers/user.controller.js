@@ -165,7 +165,7 @@ export const getUserAuditLogs = asyncHandler(async (req, res) => {
 
 /**
  * "Related records" for the detail page's right rail — sales this user
- * has recorded (sales.created_by -> users.id, see modules/sales). Reaches
+ * has recorded (sales.created_by -> users.id, see modules/example-sales). Reaches
  * into a feature module from core, which is a deliberate, narrow
  * exception to the usual module boundary; tolerant of the module being
  * absent (returns an empty list) rather than crashing, so Users doesn't
@@ -176,7 +176,7 @@ export const getUserRelatedSales = asyncHandler(async (req, res) => {
   if (!existing) throw ApiError.notFound('User not found');
 
   try {
-    const { saleRepository } = await import('#modules/sales/repository.js');
+    const { saleRepository } = await import('#modules/example-sales/repository.js');
     const sales = await saleRepository.findByCreatedBy(req.params.id);
     res.json({ sales });
   } catch {

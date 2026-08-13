@@ -18,23 +18,23 @@ const adminMenu: MenuGroup[] = [
     group: 'Catalog',
     items: [
       {
-        key: 'products',
-        path: '/api/v1/products',
-        label: 'Products',
+        key: 'example-products',
+        path: '/api/v1/example-products',
+        label: 'Example Products',
         icon: 'box',
         order: 10,
         group: 'Catalog',
-        requiredPermission: 'products:read',
+        requiredPermission: 'example-products:read',
         children: [],
       },
       {
-        key: 'sales',
-        path: '/api/v1/sales',
-        label: 'Sales',
+        key: 'example-sales',
+        path: '/api/v1/example-sales',
+        label: 'Example Sales',
         icon: 'receipt',
         order: 20,
         group: 'Catalog',
-        requiredPermission: 'sales:read',
+        requiredPermission: 'example-sales:read',
         children: [],
       },
     ],
@@ -57,7 +57,7 @@ describe('menuService.getMenu()', () => {
     const result = await menuService.getMenu()
 
     expect(result).toEqual(adminMenu)
-    expect(result[0].items.map((item) => item.key)).toEqual(['products', 'sales'])
+    expect(result[0].items.map((item) => item.key)).toEqual(['example-products', 'example-sales'])
   })
 
   it('returns an empty tree for a payload shaped like a permission-less member response', async () => {
@@ -72,7 +72,7 @@ describe('menuService.getMenu()', () => {
     const partialMenu: MenuGroup[] = [
       {
         group: 'Catalog',
-        items: [adminMenu[0].items[0]], // only "products", as if the caller lacked sales:read
+        items: [adminMenu[0].items[0]], // only "example-products", as if the caller lacked example-sales:read
       },
     ]
     vi.spyOn(api, 'get').mockResolvedValue({ data: { menu: partialMenu } })
@@ -80,7 +80,7 @@ describe('menuService.getMenu()', () => {
     const result = await menuService.getMenu()
 
     expect(result[0].items).toHaveLength(1)
-    expect(result[0].items[0].key).toBe('products')
+    expect(result[0].items[0].key).toBe('example-products')
   })
 
   it('requests the unversioned /api/menu endpoint (backend mounts it outside /api/v1)', async () => {

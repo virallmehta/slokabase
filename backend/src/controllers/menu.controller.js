@@ -1,4 +1,5 @@
 import modules from '#modules/index.js';
+import { coreMenuItems } from '#config/coreMenu.js';
 import { roleRepository } from '#services/roleRepository.js';
 import { userRepository } from '#services/userRepository.js';
 import { asyncHandler } from '#utils/asyncHandler.js';
@@ -20,7 +21,7 @@ export const getMenu = asyncHandler(async (req, res) => {
   const user = await userRepository.findById(req.user.id);
   const grantedPermissions = await roleRepository.listPermissionKeys(user.role_id);
 
-  const items = modules
+  const items = [...coreMenuItems, ...modules]
     .map((mod) => filterMenuNode({ key: mod.key, path: mod.basePath, ...mod.menu }, grantedPermissions))
     .filter(Boolean);
 

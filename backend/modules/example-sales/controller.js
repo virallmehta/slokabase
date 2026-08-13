@@ -1,5 +1,5 @@
 import { saleRepository } from './repository.js';
-import { productRepository } from '../products/repository.js';
+import { productRepository } from '../example-products/repository.js';
 import { asyncHandler } from '#utils/asyncHandler.js';
 import { ApiError } from '#utils/ApiError.js';
 

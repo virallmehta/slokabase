@@ -1,4 +1,4 @@
-import { settingsRepository, castValue } from './repository.js';
+import { settingsRepository, castValue } from '#services/settingsRepository.js';
 import { asyncHandler } from '#utils/asyncHandler.js';
 import { ApiError } from '#utils/ApiError.js';
 

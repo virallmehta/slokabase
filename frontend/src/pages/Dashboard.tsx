@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 // a dash rather than fabricated numbers. Swap `value` for a real query
 // once a metrics API is wired up.
 const METRICS = [
-  { label: 'Total products', hint: 'Products module' },
-  { label: 'Total sales', hint: 'Sales module' },
+  { label: 'Total products', hint: 'Example Products module' },
+  { label: 'Total sales', hint: 'Example Sales module' },
   { label: 'Active users', hint: 'Users module' },
   { label: 'This month', hint: 'Reporting' },
 ]

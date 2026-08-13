@@ -8,12 +8,12 @@ import { createSaleSchema, updateSaleSchema } from './validators.js';
 
 const router = Router();
 
-router.get('/', authenticate, authorize('sales:read'), saleController.listSales);
-router.get('/:id', authenticate, authorize('sales:read'), saleController.getSale);
+router.get('/', authenticate, authorize('example-sales:read'), saleController.listSales);
+router.get('/:id', authenticate, authorize('example-sales:read'), saleController.getSale);
 router.post(
   '/',
   authenticate,
-  authorize('sales:write'),
+  authorize('example-sales:write'),
   verifyCsrfToken,
   validateBody(createSaleSchema),
   saleController.createSale
@@ -21,7 +21,7 @@ router.post(
 router.patch(
   '/:id',
   authenticate,
-  authorize('sales:write'),
+  authorize('example-sales:write'),
   verifyCsrfToken,
   validateBody(updateSaleSchema),
   saleController.updateSale
@@ -29,7 +29,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
-  authorize('sales:delete'),
+  authorize('example-sales:delete'),
   verifyCsrfToken,
   saleController.deleteSale
 );
