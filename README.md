@@ -21,7 +21,7 @@ Slokabase isn't a UI kit or a todo-app tutorial. It's the boring, easy-to-get-wr
 - Admin-created users get a system-generated password, emailed to them, with a forced password-change gate on first login
 
 **Authorization**
-- Permission-based RBAC (`users:read`, `products:write`, ...) — not just role names — checked fresh from the database on every request, so a permission change takes effect immediately, not on next login
+- Permission-based RBAC (`users:read`, `example-products:write`, ...) — not just role names — checked fresh from the database on every request, so a permission change takes effect immediately, not on next login
 - Three starter roles (admin/manager/member); permissions compose per role via a join table, not hardcoded `if (role === 'admin')` checks scattered through the codebase
 
 **Extensibility**
@@ -59,17 +59,14 @@ Slokabase isn't a UI kit or a todo-app tutorial. It's the boring, easy-to-get-wr
 .
 ├── backend/                 Express API (Knex, RBAC, module registry)
 │   ├── src/
-│   │   ├── controllers/     Core controllers (auth, users)
-│   │   ├── services/        Repositories & business logic
+│   │   ├── controllers/     Core controllers (auth, users, roles, settings, auditLog)
+│   │   ├── services/        Repositories & business logic (users, roles, settings)
 │   │   ├── middleware/      authenticate, authorize, CSRF, rate limiting
 │   │   ├── db/               Core migrations & seeds
-│   │   └── routes/
-│   └── modules/              Self-contained feature modules
-│       ├── products/         Example module (backend-only reference)
-│       ├── sales/             Example module (backend-only reference)
-│       ├── roles/             Roles & permissions admin
-│       ├── settings/          Generic key-value app settings
-│       └── audit-log/         Cross-module audit trail viewer
+│   │   └── routes/           Core routes (auth, users, roles, settings, audit log)
+│   └── modules/              Self-contained, optional feature modules
+│       ├── example-products/ Example module (backend-only reference)
+│       └── example-sales/    Example module (backend-only reference)
 │
 ├── frontend/                 React admin app
 │   └── src/

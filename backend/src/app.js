@@ -11,7 +11,6 @@ import { asyncHandler } from '#utils/asyncHandler.js';
 import { db } from './db/knex.js'; 
 
 import authRouter from '#routes/auth.routes.js';
-import leadsRouter from '#routes/lead.routes.js';
 import userRouter from '#routes/user.routes.js';
 import { roleRouter, roleAdminRouter } from '#routes/role.routes.js';
 import settingsRouter from '#routes/settings.routes.js';
@@ -55,7 +54,6 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.use('/api/v1/auth', authRouter);
 // 2. Mount your feature routes under a clean api namespace
-app.use('/api/v1/leads', leadsRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/roles', roleRouter);
 app.use('/api/v1/admin/roles', roleAdminRouter);
