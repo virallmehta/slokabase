@@ -1,6 +1,6 @@
 import type { ListAuditLogsParams } from '@/services/auditLogService'
 import { MAX_AUDIT_LOG_PAGE_SIZE } from '@/services/auditLogService'
-import type { PageSize } from '@/components/data-table/DataTablePagination'
+import type { PageSize } from '@/constants/pagination'
 
 // Raw UI state from AuditLogListPage's controls — Select components use
 // the sentinel 'all' for "no filter" (consistent with RolesListPage's

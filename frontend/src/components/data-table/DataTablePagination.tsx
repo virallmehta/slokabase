@@ -1,10 +1,8 @@
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { PAGE_SIZE_OPTIONS, type PageSize } from '@/constants/pagination'
 
-// A page size, or the sentinel meaning "show every row on one page" — see
-// frontend/DESIGN.md's list-view checklist: every list page's "Rows per
-// page" dropdown must offer exactly 25/50/100/All, in that order.
-export type PageSize = number | 'all'
+export type { PageSize }
 
 interface DataTablePaginationProps {
   page: number
@@ -35,7 +33,7 @@ export function DataTablePagination({
   page,
   limit,
   total,
-  pageSizeOptions = [25, 50, 100, 'all'],
+  pageSizeOptions = PAGE_SIZE_OPTIONS,
   onPageChange,
   onLimitChange,
 }: DataTablePaginationProps) {

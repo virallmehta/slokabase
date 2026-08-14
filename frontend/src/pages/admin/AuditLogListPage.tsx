@@ -5,7 +5,7 @@ import { userService } from '@/services/userService'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { buildAuditLogQueryParams } from '@/utils/auditLogQuery'
 import { DataTable } from '@/components/data-table/DataTable'
-import { DataTablePagination, type PageSize } from '@/components/data-table/DataTablePagination'
+import { DataTablePagination } from '@/components/data-table/DataTablePagination'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -21,8 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-
-const DEFAULT_PAGE_SIZE: PageSize = 25
+import { DEFAULT_PAGE_SIZE, type PageSize } from '@/constants/pagination'
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString()

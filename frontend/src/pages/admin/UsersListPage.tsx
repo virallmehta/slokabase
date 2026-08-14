@@ -6,7 +6,8 @@ import { userService, MAX_USERS_PAGE_SIZE, type AdminUser, type Role } from '@/s
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { getSelectAllState } from '@/utils/selectionState'
 import { DataTable } from '@/components/data-table/DataTable'
-import { DataTablePagination, type PageSize } from '@/components/data-table/DataTablePagination'
+import { DataTablePagination } from '@/components/data-table/DataTablePagination'
+import { DEFAULT_PAGE_SIZE, type PageSize } from '@/constants/pagination'
 import { CreateUserDialog } from '@/pages/admin/CreateUserDialog'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -31,10 +32,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-
-// frontend/DESIGN.md's list-view checklist requires exactly 25/50/100/All
-// as the "Rows per page" options — 25 (the smallest) is the default.
-const DEFAULT_PAGE_SIZE: PageSize = 25
 
 function formatDate(value: string | null) {
   if (!value) return 'Never'
