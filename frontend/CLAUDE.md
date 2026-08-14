@@ -28,6 +28,7 @@ npm test             # vitest run
 - **New list/detail admin view**: follow `frontend/.claude/skills/admin-crud-pattern/SKILL.md` for the established table/filter/detail-page pattern rather than building one from scratch.
 - **Forms**: Zod schemas wired with `useForm({ resolver: zodResolver(schema) })` — React Hook Form + Zod throughout.
 - **Env vars**: read via `env` in `src/config/env.ts` (`VITE_API_URL`, defaulting to `http://localhost:3000/api/v1`) rather than reading `import.meta.env` directly elsewhere.
+- **Hard config vs. soft setting vs. plain constant**: mirrors the same rule on the backend (see `backend/CLAUDE.md`) — (1) **hard config** is `src/config/env.ts`'s `env` object (`VITE_API_URL`, varies per deployment); (2) **soft setting** is a value fetched from the backend's `app_settings` table via `publicSettingsService`/`usePublicSettings` (`src/hooks/usePublicSettings.ts`) — currently `appName`/`supportEmail`, both genuinely admin-editable-at-runtime branding; (3) **plain constant** is a `src/constants/*.ts` file (e.g. `src/constants/pagination.ts`'s `DEFAULT_PAGE_SIZE`/`PAGE_SIZE_OPTIONS`) for anything fixed in the codebase that isn't a per-deployment or per-admin choice. Don't invent a fourth place (a hardcoded literal in a component) for something that's actually one of these three.
 
 ## Design tokens (`src/index.css`)
 
