@@ -6,10 +6,10 @@ import { verifyCsrfToken } from '#middleware/csrf.js';
 import { validateBody } from '#middleware/validate.js';
 import { updateSettingSchema } from '#validators/settings.validators.js';
 
-const router = Router();
-
-router.get('/', authenticate, authorize('settings:manage'), settingsController.listSettings);
-router.put(
+// Full admin CRUD — mounted at /api/v1/admin/settings.
+export const settingsRouter = Router();
+settingsRouter.get('/', authenticate, authorize('settings:read'), settingsController.listSettings);
+settingsRouter.put(
   '/:key',
   authenticate,
   authorize('settings:manage'),
@@ -18,4 +18,8 @@ router.put(
   settingsController.updateSetting
 );
 
-export default router;
+// Public (any authenticated user) — mounted at /api/v1/settings/public.
+// No authorize() call at all: this is deliberately reachable by every
+// logged-in user, not gated on settings:read/settings:manage.
+export const publicSettingsRouter = Router();
+publicSettingsRouter.get('/', authenticate, settingsController.getPublicSettings);

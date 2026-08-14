@@ -67,11 +67,11 @@ describe('Application Settings module — /api/v1/admin/settings', () => {
     await request(app).get('/api/v1/admin/settings').expect(401);
   });
 
-  it('denies a manager (lacks settings:manage) from listing settings', async () => {
+  it('denies a manager (lacks settings:read) from listing settings', async () => {
     await managerAgent.get('/api/v1/admin/settings').expect(403);
   });
 
-  it('denies a member (lacks settings:manage) from listing settings', async () => {
+  it('denies a member (lacks settings:read) from listing settings', async () => {
     await memberAgent.get('/api/v1/admin/settings').expect(403);
   });
 

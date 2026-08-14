@@ -26,6 +26,18 @@ export const listSettings = asyncHandler(async (req, res) => {
   res.json({ groups: groupByCategory(settings) });
 });
 
+// Non-admin-gated: exposes exactly the two settings that legitimately
+// need to reach every authenticated user's UI (sidebar name, page title,
+// help link) without requiring settings:manage. Never add a third field
+// here without checking it's actually meant to be public — see
+// backend/CLAUDE.md's "Hard config vs. soft setting vs. plain constant"
+// section.
+export const getPublicSettings = asyncHandler(async (req, res) => {
+  const appName = await settingsRepository.get('app_name');
+  const supportEmail = await settingsRepository.get('support_email');
+  res.json({ appName, supportEmail });
+});
+
 export const updateSetting = asyncHandler(async (req, res) => {
   const existing = await settingsRepository.findRaw(req.params.key);
   if (!existing) throw ApiError.notFound('Setting not found');
