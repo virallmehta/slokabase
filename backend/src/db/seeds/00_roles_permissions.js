@@ -24,6 +24,7 @@ export async function seed(knex) {
     { key: 'admin', name: 'Admin' },
     { key: 'manager', name: 'Manager' },
     { key: 'member', name: 'Member' },
+    { key: 'demo', name: 'Demo' },
   ];
   for (const role of roles) {
     const existing = await knex('roles').where({ key: role.key }).first();
@@ -67,6 +68,22 @@ export async function seed(knex) {
       rolePermissions[roleKey] = [...(rolePermissions[roleKey] || []), ...permissionKeys];
     }
   }
+
+  // The public demo account (see db/seeds/03_demo_user.js) needs to be
+  // able to SHOW every admin section without being able to change
+  // anything in it — every key here is a :read permission, deliberately
+  // never a :write/:delete/:manage one. Not derived from
+  // baseRolePermissions/modules' rolePermissions (those describe
+  // admin/manager/member's grants) — demo's grant list is curated by
+  // hand here since it doesn't correspond to any existing role tier.
+  rolePermissions.demo = [
+    'users:read',
+    'roles:read',
+    'settings:read',
+    'audit:read',
+    'example-products:read',
+    'example-sales:read',
+  ];
 
   for (const permission of permissions) {
     const existing = await knex('permissions').where({ key: permission.key }).first();
