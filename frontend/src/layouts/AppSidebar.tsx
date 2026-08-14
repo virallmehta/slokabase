@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/authStore'
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -16,6 +17,8 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
 import { useMenu } from '@/hooks/useMenu'
+import { usePublicSettings } from '@/hooks/usePublicSettings'
+import { SupportContact } from '@/components/SupportContact'
 import type { MenuItem } from '@/services/menuService'
 import { resolveIcon } from '@/layouts/icon-map'
 import { cn } from '@/lib/utils'
@@ -92,6 +95,7 @@ function MenuLink({ item, pathname }: { item: MenuItem; pathname: string }) {
 
 export function AppSidebar() {
   const { groups, status } = useMenu()
+  const { appName } = usePublicSettings()
   const { pathname } = useLocation()
   const currentUser = useAuthStore((s) => s.user)
 
@@ -116,7 +120,7 @@ export function AppSidebar() {
           {/* Collapses with the rest of the sidebar's labels — left as-is
               it overflows the icon-only rail and covers the trigger button
               in the topbar next to it (see AppSidebar collapsible fix). */}
-          <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">Slokabase</span>
+          <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">{appName ?? 'Slokabase'}</span>
         </NavLink>
       </SidebarHeader>
       <SidebarContent>
@@ -177,6 +181,9 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
+      <SidebarFooter>
+        <SupportContact />
+      </SidebarFooter>
     </Sidebar>
   )
 }
