@@ -89,7 +89,7 @@ describe('Admin Users module — /api/v1/users, /api/v1/roles', () => {
   describe('GET /api/v1/users (list/search/filter/pagination)', () => {
     it('lists users with pagination metadata', async () => {
       const res = await adminAgent.get('/api/v1/users').expect(200);
-      expect(res.body).toMatchObject({ page: 1, limit: 20 });
+      expect(res.body).toMatchObject({ page: 1, limit: 25 });
       expect(res.body.total).toBeGreaterThanOrEqual(3); // admin + manager + member
       expect(Array.isArray(res.body.users)).toBe(true);
     });

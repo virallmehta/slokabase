@@ -1,6 +1,7 @@
 import { db } from '#db/knex.js';
 import { roleRepository } from '#services/roleRepository.js';
 import { createAuditedRepository } from '#services/auditedRepository.js';
+import { DEFAULT_PAGE_SIZE } from '#config/constants.js';
 
 const audited = createAuditedRepository('users', 'user');
 
@@ -46,7 +47,7 @@ export const userRepository = {
    * so the frontend can render pagination controls without a second
    * count query of its own.
    */
-  list: async ({ search, role, status, page = 1, limit = 20 } = {}) => {
+  list: async ({ search, role, status, page = 1, limit = DEFAULT_PAGE_SIZE } = {}) => {
     const baseQuery = db('users').join('roles', 'roles.id', 'users.role_id');
 
     if (search) {
