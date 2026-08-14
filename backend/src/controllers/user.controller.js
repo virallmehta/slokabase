@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { userRepository } from '#services/userRepository.js';
 import { auditLogRepository } from '#services/auditLogRepository.js';
 import { sendEmail } from '#services/emailService.js';
+import { settingsRepository } from '#services/settingsRepository.js';
 import { hashPassword, verifyPassword } from '#utils/password.js';
 import { toPublicUser } from '#utils/publicUser.js';
 import { asyncHandler } from '#utils/asyncHandler.js';
@@ -111,11 +112,12 @@ export const createUser = asyncHandler(async (req, res) => {
     { actorId: req.user.id }
   );
 
+  const appName = (await settingsRepository.get('app_name')) || 'Slokabase';
   await sendEmail({
     to: user.email,
-    subject: 'Your Slokabase account has been created',
-    text: `Welcome to Slokabase! An account has been created for you.\n\nEmail: ${user.email}\nTemporary password: ${temporaryPassword}\n\nYou'll be asked to set your own password when you first log in.`,
-    html: `<p>Welcome to Slokabase! An account has been created for you.</p><p><strong>Email:</strong> ${user.email}<br><strong>Temporary password:</strong> ${temporaryPassword}</p><p>You'll be asked to set your own password when you first log in.</p>`,
+    subject: `Your ${appName} account has been created`,
+    text: `Welcome to ${appName}! An account has been created for you.\n\nEmail: ${user.email}\nTemporary password: ${temporaryPassword}\n\nYou'll be asked to set your own password when you first log in.`,
+    html: `<p>Welcome to ${appName}! An account has been created for you.</p><p><strong>Email:</strong> ${user.email}<br><strong>Temporary password:</strong> ${temporaryPassword}</p><p>You'll be asked to set your own password when you first log in.</p>`,
   });
 
   res.status(201).json({ user });
