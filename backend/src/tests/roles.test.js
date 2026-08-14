@@ -10,13 +10,24 @@ import { resetDatabase } from './testDb.js';
 const basePermissionKeys = [
   'audit:read',
   'roles:manage',
+  'roles:read',
   'settings:manage',
+  'settings:read',
   'users:delete',
   'users:read',
   'users:write',
 ];
 const baseRolePermissions = {
-  admin: ['users:read', 'users:write', 'users:delete', 'roles:manage', 'settings:manage', 'audit:read'],
+  admin: [
+    'users:read',
+    'users:write',
+    'users:delete',
+    'roles:read',
+    'roles:manage',
+    'settings:read',
+    'settings:manage',
+    'audit:read',
+  ],
   manager: ['users:read', 'users:write'],
   member: [],
 };

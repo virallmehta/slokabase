@@ -80,7 +80,7 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
     await request(app).get('/api/v1/admin/roles').expect(401);
   });
 
-  it('denies a manager (lacks roles:manage) from listing roles', async () => {
+  it('denies a manager (lacks roles:read) from listing roles', async () => {
     await managerAgent.get('/api/v1/admin/roles').expect(403);
   });
 
@@ -206,6 +206,15 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
     expect(res.body.message).toBe('The admin role must always retain roles:manage');
   });
 
+  it('refuses to remove roles:read from the admin role while keeping roles:manage (self-lockout guard)', async () => {
+    const res = await adminAgent
+      .put(`/api/v1/admin/roles/${adminRoleId}/permissions`)
+      .set('X-CSRF-Token', adminCsrf)
+      .send({ permissionKeys: ['users:read', 'roles:manage'] })
+      .expect(400);
+    expect(res.body.message).toBe('The admin role must always retain roles:read');
+  });
+
   it('flags admin/manager/member as system roles, and every seeded permission a module hardcodes as system permissions', async () => {
     const res = await adminAgent.get('/api/v1/admin/roles').expect(200);
     for (const key of ['admin', 'manager', 'member']) {
@@ -218,7 +227,9 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
     expect(systemKeys).toEqual([
       'audit:read',
       'roles:manage',
+      'roles:read',
       'settings:manage',
+      'settings:read',
       'users:delete',
       'users:read',
       'users:write',
