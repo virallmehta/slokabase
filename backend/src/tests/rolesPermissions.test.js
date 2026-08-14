@@ -84,7 +84,7 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
     await managerAgent.get('/api/v1/admin/roles').expect(403);
   });
 
-  it('denies a member (lacks roles:manage) from listing roles', async () => {
+  it('denies a member (lacks roles:read) from listing roles', async () => {
     await memberAgent.get('/api/v1/admin/roles').expect(403);
   });
 

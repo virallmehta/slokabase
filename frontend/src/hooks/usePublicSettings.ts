@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { publicSettingsService, type PublicSettings } from '@/services/publicSettingsService'
+import { useAuthStore } from '@/store/authStore'
 
 type PublicSettingsStatus = 'loading' | 'success' | 'error'
 
@@ -10,6 +11,11 @@ type PublicSettingsStatus = 'loading' | 'success' | 'error'
 export function usePublicSettings() {
   const [settings, setSettings] = useState<PublicSettings | null>(null)
   const [status, setStatus] = useState<PublicSettingsStatus>('loading')
+  // GET /settings/public requires authentication, so the very first
+  // mount-time fetch (before login) legitimately 401s. Without watching
+  // auth state, an in-SPA login (no page reload) would never trigger a
+  // refetch and document.title/etc. would stay stale forever.
+  const user = useAuthStore((s) => s.user)
 
   useEffect(() => {
     let cancelled = false
@@ -30,7 +36,7 @@ export function usePublicSettings() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [user])
 
   return {
     appName: settings?.appName ?? null,

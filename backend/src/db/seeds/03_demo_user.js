@@ -11,9 +11,16 @@ import bcrypt from 'bcryptjs';
  * first. CHANGE OR REMOVE this seed before any deployment where a
  * publicly-known, unrevokable read-only login isn't intended.
  *
+ * Opt-in, not opt-out: only runs when SEED_DEMO=true is explicitly set,
+ * so a plain `npm run seed` against production/staging doesn't silently
+ * create a publicly-known login. Set SEED_DEMO=true wherever you want the
+ * demo account seeded (e.g. the public Vercel deployment's build step).
+ *
  * @param { import("knex").Knex } knex
  */
 export async function seed(knex) {
+  if (process.env.SEED_DEMO !== 'true') return;
+
   const email = process.env.SEED_DEMO_EMAIL || 'demo@example.com';
   const existing = await knex('users').where({ email }).first();
   if (existing) return;

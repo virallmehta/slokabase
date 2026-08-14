@@ -97,6 +97,13 @@ export async function seed(knex) {
     (await knex('permissions').select('id', 'key')).map((p) => [p.key, p.id])
   );
 
+  // Guards against optional modules (example-products/example-sales) being
+  // deleted per backend/CLAUDE.md's documented "delete them if you don't
+  // need this domain" configuration — without this filter, demo's
+  // hand-curated grant list above would reference permission keys that no
+  // longer exist and crash the insert loop below.
+  rolePermissions.demo = rolePermissions.demo.filter((key) => permissionIdByKey[key]);
+
   for (const [roleKey, permissionKeys] of Object.entries(rolePermissions)) {
     for (const permissionKey of permissionKeys) {
       const roleId = roleIdByKey[roleKey];

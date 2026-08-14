@@ -7,6 +7,12 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     fileParallelism: false, // Prevents SQLite database lock file errors during multiple tests
+    env: {
+      // The demo seed (db/seeds/03_demo_user.js) is opt-in via SEED_DEMO
+      // outside tests, but demoRole.test.js/menu.test.js rely on the demo
+      // account existing after resetDatabase()'s db.seed.run() call.
+      SEED_DEMO: 'true',
+    },
   },
   resolve: {
     alias: {
