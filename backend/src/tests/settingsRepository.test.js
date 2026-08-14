@@ -47,8 +47,8 @@ describe('settingsRepository (backend/src/services/settingsRepository.js)', () =
       const settings = await settingsRepository.getAll();
       const byKey = Object.fromEntries(settings.map((s) => [s.key, s]));
       expect(byKey.app_name.value).toBe('Slokabase');
-      expect(byKey.items_per_page_default.value).toBe(25);
-      expect(typeof byKey.items_per_page_default.value).toBe('number');
+      expect(byKey.support_email.value).toBe('support@example.com');
+      expect(typeof byKey.support_email.value).toBe('string');
     });
 
     it('get returns a single cast value by key', async () => {
@@ -99,10 +99,19 @@ describe('settingsRepository (backend/src/services/settingsRepository.js)', () =
     });
 
     it('serializes a number value back to text in storage, cast to a number again on read', async () => {
-      await settingsRepository.set('items_per_page_default', 50, {});
-      const row = await db('app_settings').where({ key: 'items_per_page_default' }).first();
+      await db('app_settings').insert({
+        key: 'test_number_setting',
+        value: '1',
+        type: 'number',
+        category: 'General',
+        description: 'Test-only number setting.',
+      });
+      settingsRepository._invalidateCacheForTests();
+
+      await settingsRepository.set('test_number_setting', 50, {});
+      const row = await db('app_settings').where({ key: 'test_number_setting' }).first();
       expect(row.value).toBe('50');
-      expect(await settingsRepository.get('items_per_page_default')).toBe(50);
+      expect(await settingsRepository.get('test_number_setting')).toBe(50);
     });
 
     it('records updated_by', async () => {

@@ -82,8 +82,6 @@ describe('Application Settings module — /api/v1/admin/settings', () => {
     const byKey = Object.fromEntries(res.body.groups[0].settings.map((s) => [s.key, s]));
     expect(byKey.app_name.value).toBe('Slokabase');
     expect(typeof byKey.app_name.value).toBe('string');
-    expect(byKey.items_per_page_default.value).toBe(25);
-    expect(typeof byKey.items_per_page_default.value).toBe('number');
   });
 
   it('404s updating an unknown setting key', async () => {
@@ -116,8 +114,17 @@ describe('Application Settings module — /api/v1/admin/settings', () => {
   });
 
   it('rejects a value of the wrong type for a number field (string sent)', async () => {
+    await db('app_settings').insert({
+      key: 'test_number_setting',
+      value: '10',
+      type: 'number',
+      category: 'General',
+      description: 'Test-only number setting.',
+    });
+    settingsRepository._invalidateCacheForTests();
+
     const res = await adminAgent
-      .put('/api/v1/admin/settings/items_per_page_default')
+      .put('/api/v1/admin/settings/test_number_setting')
       .set('X-CSRF-Token', adminCsrf)
       .send({ value: 'fifty' })
       .expect(400);
@@ -140,15 +147,24 @@ describe('Application Settings module — /api/v1/admin/settings', () => {
   });
 
   it('updating a setting invalidates the cache — a subsequent read is not stale', async () => {
+    await db('app_settings').insert({
+      key: 'test_cache_setting',
+      value: 'before',
+      type: 'string',
+      category: 'General',
+      description: 'Test-only setting for cache-invalidation coverage.',
+    });
+    settingsRepository._invalidateCacheForTests();
+
     await adminAgent
-      .put('/api/v1/admin/settings/items_per_page_default')
+      .put('/api/v1/admin/settings/test_cache_setting')
       .set('X-CSRF-Token', adminCsrf)
-      .send({ value: 100 })
+      .send({ value: 'after' })
       .expect(200);
 
     const res = await adminAgent.get('/api/v1/admin/settings').expect(200);
     const byKey = Object.fromEntries(res.body.groups[0].settings.map((s) => [s.key, s]));
-    expect(byKey.items_per_page_default.value).toBe(100);
+    expect(byKey.test_cache_setting.value).toBe('after');
   });
 
   it('updates a boolean-typed setting correctly (round-trips through cast/serialize)', async () => {

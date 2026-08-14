@@ -4,6 +4,13 @@
  * another row here (plus a matching entry in the frontend form), never a
  * migration.
  *
+ * Only settings something in the app actually reads belong here — see
+ * backend/CLAUDE.md's "Hard config vs. soft setting vs. plain constant"
+ * section for the rule. `app_name` and `support_email` are read by
+ * GET /api/v1/settings/public (src/controllers/settings.controller.js);
+ * pagination defaults and timezone display are NOT settings — see
+ * src/config/constants.js and frontend/src/constants/pagination.ts.
+ *
  * @param { import("knex").Knex } knex
  */
 export async function seed(knex) {
@@ -13,7 +20,7 @@ export async function seed(knex) {
       value: 'Slokabase',
       type: 'string',
       category: 'General',
-      description: 'Name shown in the app header and page titles.',
+      description: 'Name shown in the sidebar, page title, and account emails.',
     },
     {
       key: 'support_email',
@@ -21,20 +28,6 @@ export async function seed(knex) {
       type: 'string',
       category: 'General',
       description: 'Contact address shown to users who need help.',
-    },
-    {
-      key: 'default_timezone',
-      value: 'UTC',
-      type: 'string',
-      category: 'General',
-      description: 'Timezone used for displaying dates until a user sets their own.',
-    },
-    {
-      key: 'items_per_page_default',
-      value: '25',
-      type: 'number',
-      category: 'General',
-      description: 'Default "rows per page" for admin list views.',
     },
   ];
 
