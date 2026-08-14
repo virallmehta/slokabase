@@ -18,10 +18,7 @@ export const config = {
     frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
 
     db: {
-      // Force sqlite3 for tests — they need an isolated, synchronous database
-      // with no external dependencies (like a PostgreSQL server). In development
-      // and production, respect DB_CLIENT from the environment (see .env).
-      client: isTest ? 'sqlite3' : (process.env.DB_CLIENT || 'sqlite3'),
+      client: process.env.DB_CLIENT || 'sqlite3',
       // sqliteFilename: process.env.SQLITE_FILENAME || './data/dev.sqlite3',
       // If running tests, use a separate test file so dev data stays perfectly safe!
       sqliteFilename: isTest ? './data/test.sqlite3' : (process.env.SQLITE_FILENAME || './data/dev.sqlite3'),
