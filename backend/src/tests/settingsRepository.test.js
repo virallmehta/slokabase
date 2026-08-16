@@ -47,8 +47,8 @@ describe('settingsRepository (backend/src/services/settingsRepository.js)', () =
       const settings = await settingsRepository.getAll();
       const byKey = Object.fromEntries(settings.map((s) => [s.key, s]));
       expect(byKey.app_name.value).toBe('Slokabase');
-      expect(byKey.support_email.value).toBe('support@example.com');
-      expect(typeof byKey.support_email.value).toBe('string');
+      expect(byKey.smtp_host.value).toBe('');
+      expect(typeof byKey.smtp_host.value).toBe('string');
     });
 
     it('get returns a single cast value by key', async () => {
@@ -85,11 +85,11 @@ describe('settingsRepository (backend/src/services/settingsRepository.js)', () =
 
     it('a subsequent getAll() after set() reflects the new value, not a stale cached array', async () => {
       await settingsRepository.getAll(); // populate the cache
-      await settingsRepository.set('support_email', 'new-support@example.com', {});
+      await settingsRepository.set('smtp_host', 'smtp.example.com', {});
 
       const settings = await settingsRepository.getAll();
       const byKey = Object.fromEntries(settings.map((s) => [s.key, s]));
-      expect(byKey.support_email.value).toBe('new-support@example.com');
+      expect(byKey.smtp_host.value).toBe('smtp.example.com');
     });
   });
 

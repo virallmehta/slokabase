@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { ColumnDef } from '@tanstack/react-table'
+import axios from 'axios'
+import { toast } from 'sonner'
 import { Download, MoreHorizontal } from 'lucide-react'
 import { userService, MAX_USERS_PAGE_SIZE, type AdminUser, type Role } from '@/services/userService'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
@@ -141,7 +143,18 @@ export default function UsersListPage() {
     setIsBulkWorking(true)
     try {
       await Promise.all([...selectedIds].map((id) => userService.updateUser(id, { status: 'suspended' })))
+      toast.success('Selected users archived.')
       refetch()
+    } catch (err) {
+      // Most likely cause: the selection included the last remaining
+      // admin account, which the backend refuses to suspend (see
+      // user.controller.js's updateUser) — surface it instead of failing
+      // silently, since a bulk action gives no other feedback.
+      toast.error(
+        axios.isAxiosError(err) && typeof err.response?.data?.message === 'string'
+          ? err.response.data.message
+          : "Couldn't archive the selected users."
+      )
     } finally {
       setIsBulkWorking(false)
     }
@@ -153,9 +166,22 @@ export default function UsersListPage() {
 
   async function handleConfirmDelete() {
     if (pendingDeleteId == null) return
-    await userService.deleteUser(pendingDeleteId)
-    setPendingDeleteId(null)
-    refetch()
+    try {
+      await userService.deleteUser(pendingDeleteId)
+      toast.success('User deleted.')
+      setPendingDeleteId(null)
+      refetch()
+    } catch (err) {
+      // e.g. the target is the last remaining admin (see
+      // user.controller.js's deleteUser) — close the dialog either way so
+      // the toast, not a stuck confirm dialog, carries the explanation.
+      setPendingDeleteId(null)
+      toast.error(
+        axios.isAxiosError(err) && typeof err.response?.data?.message === 'string'
+          ? err.response.data.message
+          : "Couldn't delete this user."
+      )
+    }
   }
 
   const columns = useMemo<ColumnDef<AdminUser>[]>(

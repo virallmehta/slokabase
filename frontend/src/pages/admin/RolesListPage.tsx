@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { ColumnDef } from '@tanstack/react-table'
+import { toast } from 'sonner'
 import { MoreHorizontal, Plus } from 'lucide-react'
 import { roleService, type AdminRole } from '@/services/roleService'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
@@ -53,10 +54,8 @@ export default function RolesListPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [refreshKey, setRefreshKey] = useState(0)
   const [isBulkWorking, setIsBulkWorking] = useState(false)
-  const [bulkError, setBulkError] = useState<string | null>(null)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -135,27 +134,28 @@ export default function RolesListPage() {
 
   async function handleConfirmDelete() {
     if (pendingDeleteId == null) return
-    setDeleteError(null)
     try {
       await roleService.deleteRole(pendingDeleteId)
+      toast.success('Role deleted.')
       setPendingDeleteId(null)
       refetch()
     } catch {
       // Most likely a role still assigned to users (409) — the backend is
       // the source of truth here, this dialog just surfaces its response.
-      setDeleteError('Could not delete this role. It may still be assigned to users.')
+      setPendingDeleteId(null)
+      toast.error('Could not delete this role. It may still be assigned to users.')
     }
   }
 
   async function handleConfirmBulkDelete() {
     setIsBulkWorking(true)
-    setBulkError(null)
     try {
       await Promise.all([...selectedIds].map((id) => roleService.deleteRole(id)))
+      toast.success('Selected roles deleted.')
       setPendingBulkDelete(false)
       refetch()
     } catch {
-      setBulkError('Could not delete one or more selected roles. They may still be assigned to users.')
+      toast.error('Could not delete one or more selected roles. They may still be assigned to users.')
     } finally {
       setIsBulkWorking(false)
     }
@@ -300,17 +300,6 @@ export default function RolesListPage() {
                 </Button>
               </div>
             </div>
-          )}
-
-          {bulkError && (
-            <Alert variant="destructive">
-              <AlertDescription>{bulkError}</AlertDescription>
-            </Alert>
-          )}
-          {deleteError && (
-            <Alert variant="destructive">
-              <AlertDescription>{deleteError}</AlertDescription>
-            </Alert>
           )}
 
           {error ? (

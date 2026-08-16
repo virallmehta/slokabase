@@ -3,6 +3,7 @@ import { AppRoutes } from '@/routes/AppRoutes'
 import { authService } from '@/services/authService'
 import { useAuthStore } from '@/store/authStore'
 import { usePublicSettings } from '@/hooks/usePublicSettings'
+import { Toaster } from '@/components/ui/sonner'
 
 function App() {
   const setLoading = useAuthStore((s) => s.setLoading)
@@ -27,7 +28,12 @@ function App() {
     if (appName) document.title = appName
   }, [appName])
 
-  return <AppRoutes />
+  return (
+    <>
+      <AppRoutes />
+      <Toaster richColors closeButton position="top-right" />
+    </>
+  )
 }
 
 export default App

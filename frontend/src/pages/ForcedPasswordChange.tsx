@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
+import { toast } from 'sonner'
 import { userService } from '@/services/userService'
 import { authService } from '@/services/authService'
 import { useAuthStore } from '@/store/authStore'
@@ -19,7 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 function apiErrorMessage(error: unknown, fallback: string) {
   return axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
@@ -41,7 +41,6 @@ export default function ForcedPasswordChange() {
   const user = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
   const clear = useAuthStore((s) => s.clear)
-  const [apiError, setApiError] = useState<string | null>(null)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const {
@@ -51,7 +50,6 @@ export default function ForcedPasswordChange() {
   } = useForm<ChangePasswordInput>({ resolver: zodResolver(changePasswordSchema) })
 
   async function onSubmit(values: ChangePasswordInput) {
-    setApiError(null)
     try {
       await userService.changePassword(values)
       // The endpoint itself only returns { success: true } (see
@@ -59,8 +57,9 @@ export default function ForcedPasswordChange() {
       // must_change_password on success, so update the store to match
       // rather than round-tripping through /auth/me again.
       if (user) setUser({ ...user, mustChangePassword: false })
+      toast.success("Password set — you're all set.")
     } catch (error) {
-      setApiError(apiErrorMessage(error, 'Something went wrong. Please try again.'))
+      toast.error(apiErrorMessage(error, 'Something went wrong. Please try again.'))
     }
   }
 
@@ -86,11 +85,6 @@ export default function ForcedPasswordChange() {
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <CardContent className="flex flex-col gap-4">
-            {apiError && (
-              <Alert variant="destructive">
-                <AlertDescription>{apiError}</AlertDescription>
-              </Alert>
-            )}
             <div className="flex flex-col gap-2">
               <Label htmlFor="currentPassword">Temporary password</Label>
               <Input

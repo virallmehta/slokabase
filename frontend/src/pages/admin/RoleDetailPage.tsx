@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
+import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
 import { roleService, type AdminRole, type PermissionGroup } from '@/services/roleService'
 import { createRoleSchema, type CreateRoleInput } from '@/validators/role.validators'
@@ -45,12 +46,8 @@ export default function RoleDetailPage() {
   const [groups, setGroups] = useState<PermissionGroup[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
-  const [savedMessage, setSavedMessage] = useState('Changes saved.')
   const [isSaving, setIsSaving] = useState(false)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const {
     register,
@@ -90,10 +87,16 @@ export default function RoleDetailPage() {
   // creation instead of a permissions/details save. Split out from the
   // data-loading effect above so it only ever runs once per navigation,
   // regardless of that effect's own dependencies.
+  //
+  // The ref guard matters now that this fires a toast rather than setting
+  // state: StrictMode (see main.tsx) double-invokes effects once in
+  // development, which would otherwise show "Role created." twice.
+  const createdToastShown = useRef(false)
   useEffect(() => {
+    if (createdToastShown.current) return
     if (!(location.state as LocationState | null)?.justCreated) return
-    setSavedMessage('Role created.')
-    setSaved(true)
+    createdToastShown.current = true
+    toast.success('Role created.')
     navigate(location.pathname, { replace: true, state: {} })
   }, [location, navigate])
 
@@ -102,8 +105,6 @@ export default function RoleDetailPage() {
   }
 
   async function onSubmit(values: CreateRoleInput) {
-    setSaveError(null)
-    setSaved(false)
     setIsSaving(true)
     try {
       if (isCreate) {
@@ -114,7 +115,7 @@ export default function RoleDetailPage() {
         })
         // Redirect into the new role's own detail page rather than back to
         // the list — same "land where the change happened" pattern as the
-        // edit flow's "Changes saved" banner, just for creation instead.
+        // edit flow's "Changes saved" toast, just for creation instead.
         navigate(`/roles/${result.role.id}`, { state: { justCreated: true } })
         return
       }
@@ -135,10 +136,9 @@ export default function RoleDetailPage() {
       const result = await roleService.updateRolePermissions(id, toPermissionKeysPayload(selected))
       setRole(result.role)
       setGroups(result.groups)
-      setSavedMessage('Changes saved.')
-      setSaved(true)
+      toast.success('Changes saved.')
     } catch (error) {
-      setSaveError(extractErrorMessage(error))
+      toast.error(extractErrorMessage(error))
     } finally {
       setIsSaving(false)
     }
@@ -146,13 +146,12 @@ export default function RoleDetailPage() {
 
   async function handleConfirmDelete() {
     if (!id) return
-    setDeleteError(null)
     try {
       await roleService.deleteRole(id)
       navigate('/roles')
     } catch (error) {
       setConfirmDeleteOpen(false)
-      setDeleteError(extractErrorMessage(error))
+      toast.error(extractErrorMessage(error))
     }
   }
 
@@ -198,22 +197,6 @@ export default function RoleDetailPage() {
           </Button>
         </div>
       </div>
-
-      {saveError && (
-        <Alert variant="destructive">
-          <AlertDescription>{saveError}</AlertDescription>
-        </Alert>
-      )}
-      {deleteError && (
-        <Alert variant="destructive">
-          <AlertDescription>{deleteError}</AlertDescription>
-        </Alert>
-      )}
-      {saved && (
-        <Alert>
-          <AlertDescription>{savedMessage}</AlertDescription>
-        </Alert>
-      )}
 
       <form id="role-form" onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
         <Card>

@@ -77,11 +77,20 @@ describe('Application Settings module — /api/v1/admin/settings', () => {
 
   it('lets admin list settings grouped by category, with values already cast to their declared type', async () => {
     const res = await adminAgent.get('/api/v1/admin/settings').expect(200);
-    expect(res.body.groups).toEqual([{ category: 'General', settings: expect.any(Array) }]);
+    // Alphabetical by category — Email (smtp_*) sorts before General (app_name).
+    expect(res.body.groups.map((g) => g.category)).toEqual(['Email', 'General']);
 
-    const byKey = Object.fromEntries(res.body.groups[0].settings.map((s) => [s.key, s]));
+    const generalGroup = res.body.groups.find((g) => g.category === 'General');
+    const byKey = Object.fromEntries(generalGroup.settings.map((s) => [s.key, s]));
     expect(byKey.app_name.value).toBe('Slokabase');
     expect(typeof byKey.app_name.value).toBe('string');
+  });
+
+  it('never echoes back the smtp_password value, even to an admin', async () => {
+    const res = await adminAgent.get('/api/v1/admin/settings').expect(200);
+    const emailGroup = res.body.groups.find((g) => g.category === 'Email');
+    const byKey = Object.fromEntries(emailGroup.settings.map((s) => [s.key, s]));
+    expect(byKey.smtp_password.value).toBe('');
   });
 
   it('404s updating an unknown setting key', async () => {
@@ -163,7 +172,8 @@ describe('Application Settings module — /api/v1/admin/settings', () => {
       .expect(200);
 
     const res = await adminAgent.get('/api/v1/admin/settings').expect(200);
-    const byKey = Object.fromEntries(res.body.groups[0].settings.map((s) => [s.key, s]));
+    const generalGroup = res.body.groups.find((g) => g.category === 'General');
+    const byKey = Object.fromEntries(generalGroup.settings.map((s) => [s.key, s]));
     expect(byKey.test_cache_setting.value).toBe('after');
   });
 
@@ -188,5 +198,105 @@ describe('Application Settings module — /api/v1/admin/settings', () => {
 
     const after = await settingsRepository.get('maintenance_mode');
     expect(after).toBe(true);
+  });
+
+  describe('smtp_port validation', () => {
+    it('rejects a port outside 1-65535', async () => {
+      const res = await adminAgent
+        .put('/api/v1/admin/settings/smtp_port')
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ value: 70000 })
+        .expect(400);
+      expect(res.body.message).toMatch(/smtp_port.*must be a valid port number/);
+    });
+
+    it('rejects a non-integer port', async () => {
+      const res = await adminAgent
+        .put('/api/v1/admin/settings/smtp_port')
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ value: 25.5 })
+        .expect(400);
+      expect(res.body.message).toMatch(/smtp_port.*must be a valid port number/);
+    });
+
+    it('accepts 0 (the "use the .env default" sentinel)', async () => {
+      await adminAgent
+        .put('/api/v1/admin/settings/smtp_port')
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ value: 0 })
+        .expect(200);
+    });
+
+    it('accepts a valid port', async () => {
+      const res = await adminAgent
+        .put('/api/v1/admin/settings/smtp_port')
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ value: 587 })
+        .expect(200);
+      expect(res.body.setting.value).toBe(587);
+    });
+  });
+
+  describe('smtp_from validation', () => {
+    it('rejects a value that is not a valid email address', async () => {
+      const res = await adminAgent
+        .put('/api/v1/admin/settings/smtp_from')
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ value: 'not-an-email' })
+        .expect(400);
+      expect(res.body.message).toMatch(/smtp_from.*must be a valid email address/);
+    });
+
+    it('accepts an empty string (the "use the .env default" sentinel)', async () => {
+      await adminAgent
+        .put('/api/v1/admin/settings/smtp_from')
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ value: '' })
+        .expect(200);
+    });
+
+    it('accepts a valid email address', async () => {
+      const res = await adminAgent
+        .put('/api/v1/admin/settings/smtp_from')
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ value: 'no-reply@example.com' })
+        .expect(200);
+      expect(res.body.setting.value).toBe('no-reply@example.com');
+    });
+  });
+
+  describe('smtp_password audit logging', () => {
+    it('records that it changed without logging the actual value', async () => {
+      await adminAgent
+        .put('/api/v1/admin/settings/smtp_password')
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ value: 'super-secret-value' })
+        .expect(200);
+
+      const log = await db('audit_logs')
+        .where({ entity_type: 'setting', entity_id: 'smtp_password', action: 'update' })
+        .orderBy('created_at', 'desc')
+        .first();
+      expect(log).toBeTruthy();
+      expect(JSON.stringify(log.changes)).not.toMatch(/super-secret-value/);
+    });
+  });
+
+  describe('POST /api/v1/admin/settings/test-email', () => {
+    it('denies a manager (lacks settings:manage)', async () => {
+      await managerAgent.post('/api/v1/admin/settings/test-email').set('X-CSRF-Token', adminCsrf).expect(403);
+    });
+
+    it('rejects a mutating request without a matching CSRF header', async () => {
+      await adminAgent.post('/api/v1/admin/settings/test-email').expect(403);
+    });
+
+    it('sends a test email to the caller and confirms it in the response', async () => {
+      const res = await adminAgent
+        .post('/api/v1/admin/settings/test-email')
+        .set('X-CSRF-Token', adminCsrf)
+        .expect(200);
+      expect(res.body.message).toBe(`Test email sent to ${adminCredentials.email}.`);
+    });
   });
 });

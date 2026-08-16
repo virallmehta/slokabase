@@ -4,7 +4,6 @@ import { useAuthStore } from '@/store/authStore'
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -18,7 +17,6 @@ import {
 } from '@/components/ui/sidebar'
 import { useMenu } from '@/hooks/useMenu'
 import { usePublicSettings } from '@/hooks/usePublicSettings'
-import { SupportContact } from '@/components/SupportContact'
 import type { MenuItem } from '@/services/menuService'
 import { resolveIcon } from '@/layouts/icon-map'
 import { cn } from '@/lib/utils'
@@ -181,9 +179,6 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter>
-        <SupportContact />
-      </SidebarFooter>
     </Sidebar>
   )
 }

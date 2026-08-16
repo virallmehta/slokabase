@@ -1,14 +1,23 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { toast } from 'sonner'
 import { settingsService, type AppSetting, type SettingGroup } from '@/services/settingsService'
+import { publicSettingsService } from '@/services/publicSettingsService'
 import { coerceSettingValueForSubmit, formatSettingValueForInput } from '@/utils/settingValue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
+
+// Rendered as a password input with a "leave blank to keep it" hint
+// rather than the generic text input every other string setting gets —
+// the backend never echoes this value back (see settings.controller.js's
+// SENSITIVE_KEYS), so a blank field on load does NOT mean "no password
+// set", and typing nothing here must not overwrite a configured one.
+const SENSITIVE_KEYS = new Set(['smtp_password'])
 
 type FieldValue = string | boolean
 
@@ -38,9 +47,8 @@ export default function SettingsPage() {
   const [values, setValues] = useState<Record<string, FieldValue>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false)
 
   useEffect(() => {
     settingsService
@@ -66,8 +74,6 @@ export default function SettingsPage() {
   const allSettings = groups.flatMap((g) => g.settings)
 
   async function handleSave() {
-    setSaveError(null)
-    setSaved(false)
     setIsSaving(true)
     try {
       const changed = allSettings.filter((setting) => {
@@ -93,12 +99,29 @@ export default function SettingsPage() {
             ),
           }))
         )
+        // Tells every mounted usePublicSettings() (sidebar header, page
+        // title, footer) to refetch now — without this, a changed
+        // app_name only reaches them by coincidence, on the
+        // next unrelated auth-state change (see usePublicSettings.ts).
+        publicSettingsService.notifyChanged()
       }
-      setSaved(true)
+      toast.success('Changes saved.')
     } catch (error) {
-      setSaveError(extractErrorMessage(error))
+      toast.error(extractErrorMessage(error))
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function handleSendTestEmail() {
+    setIsSendingTestEmail(true)
+    try {
+      const result = await settingsService.sendTestEmail()
+      toast.success(result.message)
+    } catch (error) {
+      toast.error(extractErrorMessage(error))
+    } finally {
+      setIsSendingTestEmail(false)
     }
   }
 
@@ -123,17 +146,6 @@ export default function SettingsPage() {
           {isSaving ? 'Saving…' : 'Save changes'}
         </Button>
       </div>
-
-      {saveError && (
-        <Alert variant="destructive">
-          <AlertDescription>{saveError}</AlertDescription>
-        </Alert>
-      )}
-      {saved && (
-        <Alert>
-          <AlertDescription>Changes saved.</AlertDescription>
-        </Alert>
-      )}
 
       {groups.map((group) => (
         <Card key={group.category}>
@@ -170,7 +182,15 @@ export default function SettingsPage() {
                 ) : (
                   <Input
                     id={setting.key}
-                    type={setting.type === 'number' ? 'number' : 'text'}
+                    type={
+                      SENSITIVE_KEYS.has(setting.key)
+                        ? 'password'
+                        : setting.type === 'number'
+                          ? 'number'
+                          : 'text'
+                    }
+                    autoComplete={SENSITIVE_KEYS.has(setting.key) ? 'new-password' : undefined}
+                    placeholder={SENSITIVE_KEYS.has(setting.key) ? 'Leave blank to keep current value' : undefined}
                     value={String(values[setting.key] ?? '')}
                     onChange={(e) => handleFieldChange(setting.key, e.target.value)}
                     className="max-w-md"
@@ -182,6 +202,13 @@ export default function SettingsPage() {
               </div>
             ))}
           </CardContent>
+          {group.category === 'Email' && (
+            <CardFooter>
+              <Button type="button" variant="outline" onClick={handleSendTestEmail} disabled={isSendingTestEmail}>
+                {isSendingTestEmail ? 'Sending…' : 'Send test email'}
+              </Button>
+            </CardFooter>
+          )}
         </Card>
       ))}
     </div>

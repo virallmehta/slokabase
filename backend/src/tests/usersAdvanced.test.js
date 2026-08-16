@@ -159,6 +159,104 @@ describe('Users module — create/delete/audit-logs/related-sales', () => {
     });
   });
 
+  describe('last-admin protection', () => {
+    it('rejects deleting the sole admin account, even by a non-self caller with users:delete', async () => {
+      // The only way a caller OTHER than the admin themselves can even
+      // attempt this is a custom role holding users:delete without being
+      // 'admin' — by default only the admin role has users:delete, and
+      // deleteUser's self-guard would otherwise mask the last-admin check
+      // (an admin can never delete themselves at all, self or not).
+      const roleRes = await adminAgent
+        .post('/api/v1/admin/roles')
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ name: 'Deleter', permissionKeys: ['users:read', 'users:delete'] })
+        .expect(201);
+
+      const deleterReg = await request(app)
+        .post('/api/v1/auth/register')
+        .send({ name: 'Deleter', email: 'deleter@example.com', password: 'password123' })
+        .expect(201);
+      await adminAgent
+        .patch(`/api/v1/users/${deleterReg.body.user.id}`)
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ roleKey: roleRes.body.role.key })
+        .expect(200);
+
+      const deleterAgent = request.agent(app);
+      const deleterLogin = await deleterAgent
+        .post('/api/v1/auth/login')
+        .send({ email: 'deleter@example.com', password: 'password123' })
+        .expect(200);
+      const deleterCsrf = csrfFrom(deleterLogin);
+
+      const meRes = await adminAgent.get('/api/v1/users/me').expect(200);
+
+      const res = await deleterAgent
+        .delete(`/api/v1/users/${meRes.body.user.id}`)
+        .set('X-CSRF-Token', deleterCsrf)
+        .expect(400);
+      expect(res.body.message).toBe("Can't delete the last remaining admin account");
+
+      // The sole admin account is untouched.
+      await adminAgent.get('/api/v1/users/me').expect(200);
+    });
+
+    it('still allows deleting a non-last admin', async () => {
+      const secondAdminReg = await request(app)
+        .post('/api/v1/auth/register')
+        .send({ name: 'Second Admin', email: 'second-admin@example.com', password: 'password123' })
+        .expect(201);
+      await adminAgent
+        .patch(`/api/v1/users/${secondAdminReg.body.user.id}`)
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ roleKey: 'admin' })
+        .expect(200);
+
+      // Two admins exist now — the target isn't "the last", so this succeeds.
+      await adminAgent
+        .delete(`/api/v1/users/${secondAdminReg.body.user.id}`)
+        .set('X-CSRF-Token', adminCsrf)
+        .expect(204);
+    });
+
+    it('rejects suspending the sole admin account', async () => {
+      const meRes = await adminAgent.get('/api/v1/users/me').expect(200);
+      const res = await adminAgent
+        .patch(`/api/v1/users/${meRes.body.user.id}`)
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ status: 'suspended' })
+        .expect(400);
+      expect(res.body.message).toBe("Can't suspend the last remaining admin account");
+    });
+
+    it('rejects reassigning the sole admin to a different role', async () => {
+      const meRes = await adminAgent.get('/api/v1/users/me').expect(200);
+      const res = await adminAgent
+        .patch(`/api/v1/users/${meRes.body.user.id}`)
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ roleKey: 'member' })
+        .expect(400);
+      expect(res.body.message).toBe("Can't reassign the last remaining admin account to a different role");
+    });
+
+    it('still allows suspending/editing a non-admin user normally', async () => {
+      const res = await adminAgent
+        .patch(`/api/v1/users/${managerId}`)
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ status: 'suspended' })
+        .expect(200);
+      expect(res.body.user.status).toBe('suspended');
+
+      // Restore for later describe blocks in this file that assume manager
+      // is active.
+      await adminAgent
+        .patch(`/api/v1/users/${managerId}`)
+        .set('X-CSRF-Token', adminCsrf)
+        .send({ status: 'active' })
+        .expect(200);
+    });
+  });
+
   describe('GET /api/v1/users/:id/audit-logs', () => {
     it('records an update entry with a readable field diff', async () => {
       await adminAgent

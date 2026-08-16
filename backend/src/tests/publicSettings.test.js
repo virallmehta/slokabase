@@ -37,9 +37,9 @@ describe('Public Settings — GET /api/v1/settings/public', () => {
     await request(app).get('/api/v1/settings/public').expect(401);
   });
 
-  it('lets a plain member (no settings:read, no settings:manage) read exactly appName/supportEmail', async () => {
+  it('lets a plain member (no settings:read, no settings:manage) read exactly appName', async () => {
     const res = await memberAgent.get('/api/v1/settings/public').expect(200);
-    expect(res.body).toEqual({ appName: 'Slokabase', supportEmail: 'support@example.com' });
+    expect(res.body).toEqual({ appName: 'Slokabase' });
   });
 
   it('lets an admin read the same shape (no elevated fields leak through)', async () => {
@@ -47,6 +47,6 @@ describe('Public Settings — GET /api/v1/settings/public', () => {
     await adminAgent.post('/api/v1/auth/login').send(adminCredentials).expect(200);
 
     const res = await adminAgent.get('/api/v1/settings/public').expect(200);
-    expect(Object.keys(res.body).sort()).toEqual(['appName', 'supportEmail']);
+    expect(Object.keys(res.body).sort()).toEqual(['appName']);
   });
 });

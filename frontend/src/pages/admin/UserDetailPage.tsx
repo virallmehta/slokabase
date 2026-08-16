@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
+import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
 import {
   userService,
@@ -65,8 +66,6 @@ export default function UserDetailPage() {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([])
   const [relatedSales, setRelatedSales] = useState<RelatedSale[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const {
@@ -93,8 +92,6 @@ export default function UserDetailPage() {
 
   async function onSubmit(values: AdminUpdateUserInput) {
     if (!id) return
-    setSaveError(null)
-    setSaved(false)
     try {
       // Never submit roleKey unless the viewer can actually manage roles —
       // even though the form was populated with the user's current role,
@@ -103,10 +100,10 @@ export default function UserDetailPage() {
       const payload = canManageRoles ? values : { ...values, roleKey: undefined }
       const updated = await userService.updateUser(id, payload)
       setUser(updated)
-      setSaved(true)
+      toast.success('Changes saved.')
       userService.getAuditLogs(id).then(setAuditLogs).catch(() => {})
     } catch (error) {
-      setSaveError(
+      toast.error(
         axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
           ? error.response.data.message
           : 'Something went wrong. Please try again.'
@@ -116,9 +113,19 @@ export default function UserDetailPage() {
 
   async function handleConfirmDelete() {
     if (!id) return
-    await userService.deleteUser(id)
-    setConfirmDeleteOpen(false)
-    navigate('/users')
+    try {
+      await userService.deleteUser(id)
+      toast.success('User deleted.')
+      setConfirmDeleteOpen(false)
+      navigate('/users')
+    } catch (error) {
+      setConfirmDeleteOpen(false)
+      toast.error(
+        axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
+          ? error.response.data.message
+          : "Couldn't delete this user."
+      )
+    }
   }
 
   if (loadError) {
@@ -146,9 +153,10 @@ export default function UserDetailPage() {
           <Badge variant={user.status === 'active' ? 'success' : 'danger'} className="capitalize">
             {user.status}
           </Badge>
+          {user.isLastAdmin && <Badge variant="secondary">Last admin</Badge>}
         </div>
         <div className="flex items-center gap-2">
-          {canDelete && currentUser?.id !== user.id && (
+          {canDelete && currentUser?.id !== user.id && !user.isLastAdmin && (
             <Button
               type="button"
               variant="outline"
@@ -163,17 +171,6 @@ export default function UserDetailPage() {
           </Button>
         </div>
       </div>
-
-      {saveError && (
-        <Alert variant="destructive">
-          <AlertDescription>{saveError}</AlertDescription>
-        </Alert>
-      )}
-      {saved && (
-        <Alert>
-          <AlertDescription>Changes saved.</AlertDescription>
-        </Alert>
-      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main panel */}
@@ -199,7 +196,7 @@ export default function UserDetailPage() {
 
                 <div className="flex flex-col gap-2">
                   <Label>Role</Label>
-                  {canManageRoles ? (
+                  {canManageRoles && !user.isLastAdmin ? (
                     <Controller
                       control={control}
                       name="roleKey"
@@ -224,7 +221,9 @@ export default function UserDetailPage() {
                         {user.role}
                       </Badge>
                       <p className="text-muted-foreground mt-1 text-xs">
-                        Only users with the roles:manage permission can reassign roles.
+                        {user.isLastAdmin
+                          ? "This is the only admin account — it can't be reassigned to another role."
+                          : 'Only users with the roles:manage permission can reassign roles.'}
                       </p>
                     </div>
                   )}
@@ -232,21 +231,32 @@ export default function UserDetailPage() {
 
                 <div className="flex flex-col gap-2">
                   <Label>Status</Label>
-                  <Controller
-                    control={control}
-                    name="status"
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="suspended">Suspended</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+                  {user.isLastAdmin ? (
+                    <div>
+                      <Badge variant="secondary" className="capitalize">
+                        {user.status}
+                      </Badge>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        This is the only admin account — it can&apos;t be suspended.
+                      </p>
+                    </div>
+                  ) : (
+                    <Controller
+                      control={control}
+                      name="status"
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="suspended">Suspended</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  )}
                 </div>
               </CardContent>
             </form>

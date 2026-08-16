@@ -32,6 +32,15 @@ export const authService = {
 
   async me(): Promise<User> {
     const { data } = await api.get<{ user: User }>('/auth/me')
+    // A malformed 200 (e.g. a misconfigured API URL routing this request
+    // to the frontend's own SPA-fallback HTML instead of the backend)
+    // must not be trusted as "authenticated" — App.tsx's hydration effect
+    // does `.then(setUser)`, which only fails closed on a rejected
+    // promise. Throwing here routes a bad response into `.catch(clear)`
+    // instead of silently authenticating with an undefined user.
+    if (!data?.user || typeof data.user.id !== 'number') {
+      throw new Error('GET /auth/me returned an unexpected response shape')
+    }
     return data.user
   },
 
