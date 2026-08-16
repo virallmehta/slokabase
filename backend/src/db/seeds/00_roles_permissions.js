@@ -24,6 +24,7 @@ export async function seed(knex) {
     { key: 'admin', name: 'Admin' },
     { key: 'manager', name: 'Manager' },
     { key: 'member', name: 'Member' },
+    { key: 'demo', name: 'Demo' },
   ];
   for (const role of roles) {
     const existing = await knex('roles').where({ key: role.key }).first();
@@ -34,12 +35,23 @@ export async function seed(knex) {
     { key: 'users:read', description: 'View other users', is_system: true },
     { key: 'users:write', description: 'Edit other users', is_system: true },
     { key: 'users:delete', description: 'Delete users', is_system: true },
-    { key: 'roles:manage', description: 'Manage roles and permissions', is_system: true },
-    { key: 'settings:manage', description: 'View and change application settings', is_system: true },
+    { key: 'roles:read', description: 'View roles and permissions', is_system: true },
+    { key: 'roles:manage', description: 'Create, edit, and delete roles and permission grants', is_system: true },
+    { key: 'settings:read', description: 'View application settings', is_system: true },
+    { key: 'settings:manage', description: 'Change application settings', is_system: true },
     { key: 'audit:read', description: 'View the system audit log', is_system: true },
   ];
   const baseRolePermissions = {
-    admin: ['users:read', 'users:write', 'users:delete', 'roles:manage', 'settings:manage', 'audit:read'],
+    admin: [
+      'users:read',
+      'users:write',
+      'users:delete',
+      'roles:read',
+      'roles:manage',
+      'settings:read',
+      'settings:manage',
+      'audit:read',
+    ],
     manager: ['users:read', 'users:write'],
     member: [],
   };
@@ -57,6 +69,22 @@ export async function seed(knex) {
     }
   }
 
+  // The public demo account (see db/seeds/03_demo_user.js) needs to be
+  // able to SHOW every admin section without being able to change
+  // anything in it — every key here is a :read permission, deliberately
+  // never a :write/:delete/:manage one. Not derived from
+  // baseRolePermissions/modules' rolePermissions (those describe
+  // admin/manager/member's grants) — demo's grant list is curated by
+  // hand here since it doesn't correspond to any existing role tier.
+  rolePermissions.demo = [
+    'users:read',
+    'roles:read',
+    'settings:read',
+    'audit:read',
+    'example-products:read',
+    'example-sales:read',
+  ];
+
   for (const permission of permissions) {
     const existing = await knex('permissions').where({ key: permission.key }).first();
     if (!existing) await knex('permissions').insert(permission);
@@ -68,6 +96,13 @@ export async function seed(knex) {
   const permissionIdByKey = Object.fromEntries(
     (await knex('permissions').select('id', 'key')).map((p) => [p.key, p.id])
   );
+
+  // Guards against optional modules (example-products/example-sales) being
+  // deleted per backend/CLAUDE.md's documented "delete them if you don't
+  // need this domain" configuration — without this filter, demo's
+  // hand-curated grant list above would reference permission keys that no
+  // longer exist and crash the insert loop below.
+  rolePermissions.demo = rolePermissions.demo.filter((key) => permissionIdByKey[key]);
 
   for (const [roleKey, permissionKeys] of Object.entries(rolePermissions)) {
     for (const permissionKey of permissionKeys) {

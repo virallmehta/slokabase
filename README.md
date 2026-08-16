@@ -36,9 +36,11 @@ Slokabase isn't a UI kit or a todo-app tutorial. It's the boring, easy-to-get-wr
 - React 19 + TypeScript, Tailwind v4 + shadcn/ui, fully typed end to end
 - Established, reusable list-view and detail-view patterns (search, filters, bulk actions, pagination, kebab menus) so a new admin page takes hours, not days
 - A real design system, not ad-hoc styling — documented tokens, contrast requirements, and interaction patterns a designer or new engineer can actually check work against
+- Toast-based action feedback ([sonner](https://sonner.emilkowal.ski/)) for every create/update/delete outcome — inline `Alert`s are reserved for page-level load failures, not transient confirmations
 
 **Email**
 - Provider-agnostic email service — every call goes through one function, so swapping from local dev (Mailpit) to a real provider (Resend, Brevo, SES, ...) is an environment variable change, not a code change
+- SMTP host/port/TLS/username/password/from-address are also editable at runtime from the admin Settings page — a database value overrides the matching `EMAIL_*` env var when set, so credentials can be rotated without a redeploy; the password is never echoed back once saved. A "Send test email" button confirms the configuration actually works
 
 ## Tech stack
 
@@ -113,6 +115,8 @@ EMAIL_PASSWORD=your-smtp-password
 EMAIL_FROM="Your App <no-reply@yourdomain.com>"
 ```
 
+These same six values can also be set (or overridden) later at runtime from the admin Settings page, without touching `.env` — see "Email" under Key features above.
+
 Then set up the database and start the server:
 
 ```bash
@@ -145,9 +149,12 @@ A new domain area (e.g. "Invoices") is a folder under `backend/modules/invoices/
 ## Testing
 
 ```bash
-cd backend && npm test     # Vitest + Supertest — full API integration coverage
-cd frontend && npm test    # Vitest — logic-level coverage (stores, services, validators)
+cd backend && npm test        # Vitest + Supertest — full API integration coverage
+cd frontend && npm test       # Vitest — logic-level coverage (stores, services, validators)
+cd frontend && npm run test:e2e  # Playwright — real-browser verification (requires the backend already running)
 ```
+
+Current status: backend 192/194 (2 intentionally skipped — a Postgres-specific regression test that only runs against a real Postgres database, see `backend/CLAUDE.md`), frontend 98/98, plus 14/14 Playwright specs covering flows unit tests can't (toast feedback, SMTP settings, last-admin guards, the public-settings sidebar sync).
 
 ## License
 

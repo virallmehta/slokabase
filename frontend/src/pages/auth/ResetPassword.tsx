@@ -1,8 +1,8 @@
-import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
+import { toast } from 'sonner'
 import { resetPasswordFormSchema, type ResetPasswordFormInput } from '@/validators/auth.validators'
 import { authService } from '@/services/authService'
 import { ROUTES } from '@/constants/routes'
@@ -29,7 +29,6 @@ export default function ResetPassword() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token')
-  const [apiError, setApiError] = useState<string | null>(null)
 
   const {
     register,
@@ -39,7 +38,6 @@ export default function ResetPassword() {
 
   async function onSubmit(values: ResetPasswordFormInput) {
     if (!token) return
-    setApiError(null)
     try {
       await authService.resetPassword({ token, newPassword: values.newPassword })
       navigate(ROUTES.login, {
@@ -47,7 +45,7 @@ export default function ResetPassword() {
         state: { flash: 'Your password has been reset. Sign in with your new password.' },
       })
     } catch (error) {
-      setApiError(apiErrorMessage(error, 'Something went wrong. Please try again.'))
+      toast.error(apiErrorMessage(error, 'Something went wrong. Please try again.'))
     }
   }
 
@@ -75,11 +73,6 @@ export default function ResetPassword() {
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <CardContent className="flex flex-col gap-4">
-              {apiError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{apiError}</AlertDescription>
-                </Alert>
-              )}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="newPassword">New password</Label>
                 <Input

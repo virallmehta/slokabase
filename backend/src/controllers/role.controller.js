@@ -183,11 +183,17 @@ export const updateRolePermissions = asyncHandler(async (req, res) => {
 
   const { allPermissions, permissionIds } = await resolvePermissionIds(req.body.permissionKeys);
 
-  // The admin role must always keep roles:manage — removing it here would
-  // instantly lock every admin (including the one making this request) out
-  // of Roles & Permissions management, with no other route back in.
+  // The admin role must always keep roles:manage AND roles:read —
+  // removing roles:manage would instantly lock every admin (including
+  // the one making this request) out of Roles & Permissions management
+  // with no other route back in; removing roles:read alone while keeping
+  // roles:manage would leave admin able to mutate roles but not load the
+  // page that lets it do so.
   if (role.key === 'admin' && !req.body.permissionKeys.includes('roles:manage')) {
     throw ApiError.badRequest('The admin role must always retain roles:manage');
+  }
+  if (role.key === 'admin' && !req.body.permissionKeys.includes('roles:read')) {
+    throw ApiError.badRequest('The admin role must always retain roles:read');
   }
 
   const beforeKeys = await roleRepository.listGrantedPermissionKeys(role.id);

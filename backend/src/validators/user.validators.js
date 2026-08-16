@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '#config/constants.js';
 
 // Wrapped under { query } for the `validate()` middleware (see
 // middleware/validate.js), which parses req.body/query/params together —
@@ -11,10 +12,10 @@ export const listUsersSchema = z.object({
     role: z.string().max(50).optional(),
     status: z.enum(['active', 'suspended']).optional(),
     page: z.coerce.number().int().min(1).optional().default(1),
-    // 500 caps a single query while still comfortably covering the "All"
-    // rows-per-page option the admin Users list offers (see frontend's
-    // MAX_USERS_PAGE_SIZE in userService.ts, which must match this).
-    limit: z.coerce.number().int().min(1).max(500).optional().default(20),
+    // Shared with every other paginated endpoint — see
+    // backend/src/config/constants.js. Frontend's MAX_USERS_PAGE_SIZE
+    // (userService.ts) must stay in sync with MAX_PAGE_SIZE.
+    limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).optional().default(DEFAULT_PAGE_SIZE),
   }),
   body: z.unknown().optional(),
   params: z.unknown().optional(),

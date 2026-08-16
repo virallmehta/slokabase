@@ -63,6 +63,22 @@ describe('GET /api/menu', () => {
     expect(res.body.menu).toEqual([]);
   });
 
+  it('includes the Roles and Settings menu entries for a demo-role user', async () => {
+    const demoCredentials = {
+      email: process.env.SEED_DEMO_EMAIL || 'demo@example.com',
+      password: process.env.SEED_DEMO_PASSWORD || 'DemoOnly123!',
+    };
+
+    const agent = request.agent(app);
+    await agent.post('/api/v1/auth/login').send(demoCredentials).expect(200);
+
+    const res = await agent.get('/api/menu').expect(200);
+    const administrationGroup = res.body.menu.find((group) => group.group === 'Administration');
+    const itemKeys = administrationGroup.items.map((item) => item.key);
+    expect(itemKeys).toContain('roles');
+    expect(itemKeys).toContain('settings');
+  });
+
   it('only shows menu items the caller holds the requiredPermission for', async () => {
     const memberRole = await db('roles').where({ key: 'member' }).first();
     const productsRead = await db('permissions').where({ key: 'example-products:read' }).first();

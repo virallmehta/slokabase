@@ -27,4 +27,9 @@ export const settingsService = {
     const { data } = await api.put<{ setting: AppSetting }>(`/admin/settings/${key}`, { value })
     return data.setting
   },
+
+  async sendTestEmail(): Promise<{ message: string }> {
+    const { data } = await api.post<{ message: string }>('/admin/settings/test-email')
+    return data
+  },
 }

@@ -1,4 +1,5 @@
 import { db } from '#db/knex.js';
+import { DEFAULT_PAGE_SIZE } from '#config/constants.js';
 
 export const auditLogRepository = {
   /**
@@ -54,7 +55,7 @@ export const auditLogRepository = {
     dateFrom,
     dateTo,
     page = 1,
-    limit = 25,
+    limit = DEFAULT_PAGE_SIZE,
   } = {}) => {
     const baseQuery = db('audit_logs').leftJoin('users', 'users.id', 'audit_logs.actor_id');
 

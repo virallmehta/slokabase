@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
+import { toast } from 'sonner'
 import { registerSchema, type RegisterInput } from '@/validators/auth.validators'
 import { authService } from '@/services/authService'
 import { useAuthStore } from '@/store/authStore'
@@ -18,12 +18,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function Register() {
   const navigate = useNavigate()
   const setUser = useAuthStore((s) => s.setUser)
-  const [apiError, setApiError] = useState<string | null>(null)
 
   const {
     register,
@@ -32,13 +30,13 @@ export default function Register() {
   } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) })
 
   async function onSubmit(values: RegisterInput) {
-    setApiError(null)
     try {
       const user = await authService.register(values)
       setUser(user)
+      toast.success('Account created — welcome!')
       navigate(ROUTES.dashboard, { replace: true })
     } catch (error) {
-      setApiError(
+      toast.error(
         axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
           ? error.response.data.message
           : 'Something went wrong. Please try again.'
@@ -55,11 +53,6 @@ export default function Register() {
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <CardContent className="flex flex-col gap-4">
-            {apiError && (
-              <Alert variant="destructive">
-                <AlertDescription>{apiError}</AlertDescription>
-              </Alert>
-            )}
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">Name</Label>
               <Input id="name" type="text" autoComplete="name" {...register('name')} />

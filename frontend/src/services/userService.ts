@@ -22,6 +22,11 @@ export interface AdminUser {
   auth_provider: string
   last_login_at: string | null
   created_at: string
+  // Only present on GET /users/:id (see user.controller.js's getUser) —
+  // true when this is the only account holding the admin role, so the
+  // detail page can disable delete/suspend/role-reassignment the same
+  // way it disables name/description edits for is_system roles.
+  isLastAdmin?: boolean
 }
 
 export interface ListUsersParams {

@@ -10,13 +10,24 @@ import { resetDatabase } from './testDb.js';
 const basePermissionKeys = [
   'audit:read',
   'roles:manage',
+  'roles:read',
   'settings:manage',
+  'settings:read',
   'users:delete',
   'users:read',
   'users:write',
 ];
 const baseRolePermissions = {
-  admin: ['users:read', 'users:write', 'users:delete', 'roles:manage', 'settings:manage', 'audit:read'],
+  admin: [
+    'users:read',
+    'users:write',
+    'users:delete',
+    'roles:read',
+    'roles:manage',
+    'settings:read',
+    'settings:manage',
+    'audit:read',
+  ],
   manager: ['users:read', 'users:write'],
   member: [],
 };
@@ -31,7 +42,19 @@ const managerPermissionKeys = [
   ...baseRolePermissions.manager,
   ...modules.flatMap((mod) => mod.rolePermissions.manager),
 ].sort();
-const totalMappingCount = adminPermissionKeys.length + managerPermissionKeys.length;
+// The demo role's grants aren't derived from baseRolePermissions/modules
+// (see the comment in db/seeds/00_roles_permissions.js) — mirror that
+// curated list here so this test stays in sync with the seed.
+const demoPermissionKeys = [
+  'users:read',
+  'roles:read',
+  'settings:read',
+  'audit:read',
+  'example-products:read',
+  'example-sales:read',
+].sort();
+const totalMappingCount =
+  adminPermissionKeys.length + managerPermissionKeys.length + demoPermissionKeys.length;
 
 describe('Roles & permissions schema/seed data', () => {
   beforeAll(async () => {
@@ -42,9 +65,9 @@ describe('Roles & permissions schema/seed data', () => {
     await db.destroy();
   });
 
-  it('creates the three starter roles', async () => {
+  it('creates the four starter roles', async () => {
     const roles = await db('roles').select('key').orderBy('key');
-    expect(roles.map((r) => r.key)).toEqual(['admin', 'manager', 'member']);
+    expect(roles.map((r) => r.key)).toEqual(['admin', 'demo', 'manager', 'member']);
   });
 
   it('creates the starter permission set, including every module\'s permissions', async () => {
@@ -85,7 +108,7 @@ describe('Roles & permissions schema/seed data', () => {
     const permissionCount = await db('permissions').count({ count: '*' }).first();
     const mappingCount = await db('role_permissions').count({ count: '*' }).first();
 
-    expect(Number(roleCount.count)).toBe(3);
+    expect(Number(roleCount.count)).toBe(4);
     expect(Number(permissionCount.count)).toBe(allPermissionKeys.length);
     expect(Number(mappingCount.count)).toBe(totalMappingCount);
   });

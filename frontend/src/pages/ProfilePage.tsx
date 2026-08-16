@@ -1,7 +1,7 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
+import { toast } from 'sonner'
 import { userService } from '@/services/userService'
 import { useAuthStore } from '@/store/authStore'
 import {
@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 function apiErrorMessage(error: unknown, fallback: string) {
   return axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
@@ -25,8 +24,6 @@ function apiErrorMessage(error: unknown, fallback: string) {
 function ProfileForm() {
   const user = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
-  const [apiError, setApiError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
 
   const {
     register,
@@ -38,17 +35,15 @@ function ProfileForm() {
   })
 
   async function onSubmit(values: UpdateProfileInput) {
-    setApiError(null)
-    setSaved(false)
     try {
       // Response includes `permissions` (see backend's toPublicUser
       // helper) so the store stays consistent with what /auth/me returns
       // — not just name/email, the full shape authStore expects.
       const updated = await userService.updateProfile(values)
       setUser(updated)
-      setSaved(true)
+      toast.success('Profile updated.')
     } catch (error) {
-      setApiError(apiErrorMessage(error, 'Something went wrong. Please try again.'))
+      toast.error(apiErrorMessage(error, 'Something went wrong. Please try again.'))
     }
   }
 
@@ -60,16 +55,6 @@ function ProfileForm() {
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <CardContent className="flex flex-col gap-4">
-          {apiError && (
-            <Alert variant="destructive">
-              <AlertDescription>{apiError}</AlertDescription>
-            </Alert>
-          )}
-          {saved && (
-            <Alert>
-              <AlertDescription>Profile updated.</AlertDescription>
-            </Alert>
-          )}
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Name</Label>
             <Input id="name" {...register('name')} />
@@ -92,9 +77,6 @@ function ProfileForm() {
 }
 
 function ChangePasswordForm() {
-  const [apiError, setApiError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
-
   const {
     register,
     handleSubmit,
@@ -103,14 +85,12 @@ function ChangePasswordForm() {
   } = useForm<ChangePasswordInput>({ resolver: zodResolver(changePasswordSchema) })
 
   async function onSubmit(values: ChangePasswordInput) {
-    setApiError(null)
-    setSaved(false)
     try {
       await userService.changePassword(values)
-      setSaved(true)
+      toast.success('Password changed.')
       reset()
     } catch (error) {
-      setApiError(apiErrorMessage(error, 'Something went wrong. Please try again.'))
+      toast.error(apiErrorMessage(error, 'Something went wrong. Please try again.'))
     }
   }
 
@@ -122,16 +102,6 @@ function ChangePasswordForm() {
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <CardContent className="flex flex-col gap-4">
-          {apiError && (
-            <Alert variant="destructive">
-              <AlertDescription>{apiError}</AlertDescription>
-            </Alert>
-          )}
-          {saved && (
-            <Alert>
-              <AlertDescription>Password changed.</AlertDescription>
-            </Alert>
-          )}
           <div className="flex flex-col gap-2">
             <Label htmlFor="currentPassword">Current password</Label>
             <Input

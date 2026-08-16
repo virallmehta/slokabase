@@ -1,7 +1,9 @@
 import crypto from 'node:crypto';
 import { userRepository } from '#services/userRepository.js';
+import { roleRepository } from '#services/roleRepository.js';
 import { auditLogRepository } from '#services/auditLogRepository.js';
 import { sendEmail } from '#services/emailService.js';
+import { settingsRepository } from '#services/settingsRepository.js';
 import { hashPassword, verifyPassword } from '#utils/password.js';
 import { toPublicUser } from '#utils/publicUser.js';
 import { asyncHandler } from '#utils/asyncHandler.js';
@@ -11,6 +13,17 @@ import { ApiError } from '#utils/ApiError.js';
 // Password changes are logged as an action with no diff (see
 // changePassword) — never log secret values.
 const AUDITABLE_FIELDS = ['name', 'email', 'status'];
+
+// True when `existing` is the only account currently holding the admin
+// role — used to block deleting/suspending/reassigning-away the last
+// admin, which would otherwise leave nobody holding roles:manage and no
+// route back in short of a direct DB edit.
+async function isLastAdmin(existing) {
+  if (existing.role !== 'admin') return false;
+  const adminRole = await roleRepository.findByKey('admin');
+  const adminCount = await roleRepository.countUsersWithRole(adminRole.id);
+  return adminCount <= 1;
+}
 
 function diffUserFields(existing, updates) {
   const changes = {};
@@ -81,7 +94,11 @@ export const listUsers = asyncHandler(async (req, res) => {
 export const getUser = asyncHandler(async (req, res) => {
   const user = await userRepository.findById(req.params.id);
   if (!user) throw ApiError.notFound('User not found');
-  res.json({ user });
+  // Lets the detail page disable the delete/suspend/role-reassignment
+  // controls for the one account that can't safely lose admin access —
+  // same "backend computes the flag, frontend just reads it" shape as
+  // is_system on roles (see RoleDetailPage.tsx).
+  res.json({ user: { ...user, isLastAdmin: await isLastAdmin(user) } });
 });
 
 /**
@@ -111,11 +128,12 @@ export const createUser = asyncHandler(async (req, res) => {
     { actorId: req.user.id }
   );
 
+  const appName = (await settingsRepository.get('app_name')) || 'Slokabase';
   await sendEmail({
     to: user.email,
-    subject: 'Your Slokabase account has been created',
-    text: `Welcome to Slokabase! An account has been created for you.\n\nEmail: ${user.email}\nTemporary password: ${temporaryPassword}\n\nYou'll be asked to set your own password when you first log in.`,
-    html: `<p>Welcome to Slokabase! An account has been created for you.</p><p><strong>Email:</strong> ${user.email}<br><strong>Temporary password:</strong> ${temporaryPassword}</p><p>You'll be asked to set your own password when you first log in.</p>`,
+    subject: `Your ${appName} account has been created`,
+    text: `Welcome to ${appName}! An account has been created for you.\n\nEmail: ${user.email}\nTemporary password: ${temporaryPassword}\n\nYou'll be asked to set your own password when you first log in.`,
+    html: `<p>Welcome to ${appName}! An account has been created for you.</p><p><strong>Email:</strong> ${user.email}<br><strong>Temporary password:</strong> ${temporaryPassword}</p><p>You'll be asked to set your own password when you first log in.</p>`,
   });
 
   res.status(201).json({ user });
@@ -133,9 +151,22 @@ export const updateUser = asyncHandler(async (req, res) => {
   const existing = await userRepository.findById(req.params.id);
   if (!existing) throw ApiError.notFound('User not found');
 
-  const { roleKey } = req.body;
+  const { roleKey, status } = req.body;
   if (roleKey && !req.user.permissions.includes('roles:manage')) {
     throw ApiError.forbidden('Only users with roles:manage can reassign roles');
+  }
+
+  // Suspending blocks login outright (see auth.controller.js's login
+  // check) and reassigning away from admin strips roles:manage — both are
+  // functionally equivalent to deleting the account from an access-control
+  // standpoint, so both need the same last-admin protection as deleteUser.
+  const losingAdminAccess = status === 'suspended' || (roleKey !== undefined && roleKey !== 'admin');
+  if (losingAdminAccess && (await isLastAdmin(existing))) {
+    throw ApiError.badRequest(
+      status === 'suspended'
+        ? "Can't suspend the last remaining admin account"
+        : "Can't reassign the last remaining admin account to a different role"
+    );
   }
 
   const changes = diffUserFields(existing, req.body);
@@ -149,6 +180,10 @@ export const deleteUser = asyncHandler(async (req, res) => {
 
   if (Number(req.params.id) === req.user.id) {
     throw ApiError.badRequest("You can't delete your own account");
+  }
+
+  if (await isLastAdmin(existing)) {
+    throw ApiError.badRequest("Can't delete the last remaining admin account");
   }
 
   await userRepository.remove(req.params.id, { actorId: req.user.id });

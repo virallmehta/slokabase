@@ -5,7 +5,7 @@ import { userService } from '@/services/userService'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { buildAuditLogQueryParams } from '@/utils/auditLogQuery'
 import { DataTable } from '@/components/data-table/DataTable'
-import { DataTablePagination, type PageSize } from '@/components/data-table/DataTablePagination'
+import { DataTablePagination } from '@/components/data-table/DataTablePagination'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -21,8 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-
-const DEFAULT_PAGE_SIZE: PageSize = 25
+import { DEFAULT_PAGE_SIZE, type PageSize } from '@/constants/pagination'
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString()
@@ -36,6 +35,20 @@ function actionBadgeVariant(action: string): 'success' | 'danger' | 'secondary' 
 
 function formatModule(entityType: string) {
   return entityType.charAt(0).toUpperCase() + entityType.slice(1)
+}
+
+// A handful of actions are deliberately recorded with no field-level diff
+// at all (see backend/CLAUDE.md's audit logging section — password
+// values are never logged, old or new) rather than merely having an
+// empty one. The generic "No field-level changes recorded for this
+// action" message reads as if nothing happened for these, which is
+// wrong — give each an accurate, specific description instead. Any
+// action not listed here still gets the generic message, which remains
+// correct for those (e.g. a save that touched no fields).
+const NO_DIFF_ACTION_DESCRIPTIONS: Record<string, string> = {
+  password_change: 'Password was changed.',
+  password_reset: 'Password was reset via a password reset link.',
+  password_reset_requested: 'A password reset link was requested.',
 }
 
 interface AdminUserOption {
@@ -316,7 +329,10 @@ export default function AuditLogListPage() {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-sm">No field-level changes recorded for this action.</p>
+            <p className="text-muted-foreground text-sm">
+              {(viewing && NO_DIFF_ACTION_DESCRIPTIONS[viewing.action]) ??
+                'No field-level changes recorded for this action.'}
+            </p>
           )}
         </DialogContent>
       </Dialog>

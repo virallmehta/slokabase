@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
+import { toast } from 'sonner'
 import { forgotPasswordSchema, type ForgotPasswordInput } from '@/validators/auth.validators'
 import { authService } from '@/services/authService'
 import { ROUTES } from '@/constants/routes'
@@ -17,10 +18,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function ForgotPassword() {
-  const [apiError, setApiError] = useState<string | null>(null)
   // The backend always responds with the same generic message whether or
   // not the email is registered (see auth.controller.js's forgotPassword)
   // — showing that message, and nothing more specific, is the point.
@@ -33,12 +32,12 @@ export default function ForgotPassword() {
   } = useForm<ForgotPasswordInput>({ resolver: zodResolver(forgotPasswordSchema) })
 
   async function onSubmit(values: ForgotPasswordInput) {
-    setApiError(null)
     try {
       await authService.forgotPassword(values.email)
+      toast.success('If an account with that email exists, a password reset link has been sent.')
       setSubmitted(true)
     } catch (error) {
-      setApiError(
+      toast.error(
         axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
           ? error.response.data.message
           : 'Something went wrong. Please try again.'
@@ -57,11 +56,6 @@ export default function ForgotPassword() {
         </CardHeader>
         {submitted ? (
           <CardContent className="flex flex-col gap-4">
-            <Alert>
-              <AlertDescription>
-                If an account with that email exists, a password reset link has been sent.
-              </AlertDescription>
-            </Alert>
             <Link to={ROUTES.login} className="text-primary text-sm underline underline-offset-4">
               Back to sign in
             </Link>
@@ -69,11 +63,6 @@ export default function ForgotPassword() {
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <CardContent className="flex flex-col gap-4">
-              {apiError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{apiError}</AlertDescription>
-                </Alert>
-              )}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" autoComplete="email" {...register('email')} />

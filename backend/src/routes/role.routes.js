@@ -18,7 +18,7 @@ roleRouter.get('/', authenticate, authorize('users:read'), roleController.listRo
 // Full Roles & Permissions management — mounted at /api/v1/admin/roles.
 export const roleAdminRouter = Router();
 
-roleAdminRouter.get('/', authenticate, authorize('roles:manage'), roleController.listRolesAdmin);
+roleAdminRouter.get('/', authenticate, authorize('roles:read'), roleController.listRolesAdmin);
 roleAdminRouter.post(
   '/',
   authenticate,
@@ -33,13 +33,13 @@ roleAdminRouter.post(
 roleAdminRouter.get(
   '/permissions/catalog',
   authenticate,
-  authorize('roles:manage'),
+  authorize('roles:read'),
   roleController.getPermissionCatalog
 );
 roleAdminRouter.get(
   '/:id/permissions',
   authenticate,
-  authorize('roles:manage'),
+  authorize('roles:read'),
   roleController.getRolePermissions
 );
 roleAdminRouter.put(

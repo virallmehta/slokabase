@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import axios from 'axios'
+import { toast } from 'sonner'
 import { loginSchema, type LoginInput } from '@/validators/auth.validators'
 import { authService } from '@/services/authService'
 import { useAuthStore } from '@/store/authStore'
@@ -18,16 +19,33 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const setUser = useAuthStore((s) => s.setUser)
-  const [apiError, setApiError] = useState<string | null>(null)
+
   // Set by ResetPassword.tsx on a successful reset (via navigate's `state`
-  // option) — a one-time confirmation, not persisted anywhere.
-  const flash = (location.state as { flash?: string } | null)?.flash ?? null
+  // option) — a one-time confirmation, not persisted anywhere. Fired once
+  // on arrival rather than rendered inline, so a later re-render (e.g. a
+  // failed login attempt right after) doesn't keep re-showing it. Same
+  // location-state-consumption shape as RoleDetailPage.tsx's `justCreated`
+  // effect, including clearing the state afterward so a later back-button
+  // visit to this history entry doesn't re-show it.
+  //
+  // The ref guard is required, not just style: StrictMode (see main.tsx)
+  // double-invokes effects once in development to surface missing
+  // cleanup, which would otherwise fire this toast twice on every login
+  // page load reached via a flash redirect.
+  const flashShown = useRef(false)
+  useEffect(() => {
+    if (flashShown.current) return
+    const flash = (location.state as { flash?: string } | null)?.flash
+    if (!flash) return
+    flashShown.current = true
+    toast.success(flash)
+    navigate(location.pathname, { replace: true, state: {} })
+  }, [location, navigate])
 
   const {
     register,
@@ -36,13 +54,12 @@ export default function Login() {
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) })
 
   async function onSubmit(values: LoginInput) {
-    setApiError(null)
     try {
       const user = await authService.login(values)
       setUser(user)
       navigate(ROUTES.dashboard, { replace: true })
     } catch (error) {
-      setApiError(
+      toast.error(
         axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
           ? error.response.data.message
           : 'Something went wrong. Please try again.'
@@ -59,16 +76,6 @@ export default function Login() {
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <CardContent className="flex flex-col gap-4">
-            {flash && (
-              <Alert>
-                <AlertDescription>{flash}</AlertDescription>
-              </Alert>
-            )}
-            {apiError && (
-              <Alert variant="destructive">
-                <AlertDescription>{apiError}</AlertDescription>
-              </Alert>
-            )}
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" autoComplete="email" {...register('email')} />
