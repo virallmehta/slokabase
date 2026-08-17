@@ -166,8 +166,6 @@ cd frontend && npm test       # Vitest — logic-level coverage (stores, service
 cd frontend && npm run test:e2e  # Playwright — real-browser verification (requires the backend already running)
 ```
 
-Current status: backend 192/194 (2 intentionally skipped — a Postgres-specific regression test that only runs against a real Postgres database, see `backend/CLAUDE.md`), frontend 98/98, plus 14/14 Playwright specs covering flows unit tests can't (toast feedback, SMTP settings, last-admin guards, the public-settings sidebar sync).
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
