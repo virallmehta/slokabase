@@ -4,6 +4,18 @@
 
 Slokabase isn't a UI kit or a todo-app tutorial. It's the boring, easy-to-get-wrong backbone every internal tool and admin panel needs — sessions, permissions, password recovery, an audit trail, a way to add new domain areas without touching core files — already built, tested, and documented, so you start your actual project on day one instead of week three.
 
+## Live demo
+
+**[slokabase.vercel.app](https://slokabase.vercel.app)** — a hosted instance you can explore right now, no local setup required.
+
+Sign in with the seeded demo account:
+
+```
+demo@example.com / DemoOnly123!
+```
+
+This account is **read-only by design** — it can view every admin section (Users, Roles, Settings, Audit Log, Example Products, Example Sales) but can't create, edit, or delete anything; every write action returns a 403. It's there so you can see the real admin UI and RBAC in action before setting anything up yourself.
+
 ## Who this is for
 
 - **Developers and agencies** who build admin-heavy business applications (internal tools, back-office panels, B2B SaaS admin surfaces) and are tired of rebuilding auth/RBAC/audit-logging from scratch on every engagement.
@@ -158,4 +170,8 @@ Current status: backend 192/194 (2 intentionally skipped — a Postgres-specific
 
 ## License
 
-This repository doesn't ship a license file. Add one appropriate for your use (MIT is a common choice for a boilerplate) before distributing or open-sourcing it.
+MIT — see [LICENSE](LICENSE).
+
+---
+
+Built by [Swastikaa](https://swastikaa.co.in).
