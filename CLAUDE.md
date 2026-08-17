@@ -12,3 +12,7 @@ Monorepo with two independently-run apps, no root package.json or workspace tool
 - `docs/` — three reference boilerplate repos (`demo-leadflow`, `express-backend`, `react-boilerplate-part-1`), each its own git repo, gitignored from this one. They're the upstream templates `backend/` and `frontend/` were generated from — useful for comparing "intended" patterns against what's implemented here, not code to run or edit.
 
 For detailed architecture, commands, and conventions for each app, see its own `CLAUDE.md`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the git workflow standard: branch naming, commit message format, the PR-before-merge rule, verifying merges landed on `origin/main`, the post-migration-merge checklist, and semantic versioning / `CHANGELOG.md` conventions.
