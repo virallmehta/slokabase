@@ -55,6 +55,58 @@ export default {
 
 `routes.js` is imported and attached to this object by `modules/index.js` (`{ ...config, routes }`) — don't put `routes` in `config.js` itself.
 
+## Declaring a workflow
+
+A module whose entity moves through named states (draft → submitted →
+approved, new → qualified → won, etc.) declares that state machine in its
+own `config.js` via an optional `workflow` key, instead of hand-rolling
+transition checks in its controller:
+
+```js
+export default {
+  key: 'example-approvals',
+  // ...permissions, rolePermissions, menu as above...
+
+  workflow: {
+    entityType: 'example-approval',       // lookup key into workflowDefinitions — usually singular, distinct from the module `key`
+    states: ['draft', 'submitted', 'approved', 'rejected'],
+    transitions: [
+      { from: 'draft', to: 'submitted', permission: 'example-approvals:write' },
+      { from: 'submitted', to: 'approved', permission: 'example-approvals:approve' },
+      { from: 'submitted', to: 'rejected', permission: 'example-approvals:approve' },
+      { from: 'submitted', to: 'draft', permission: 'example-approvals:write' },
+    ],
+  },
+};
+```
+
+`backend/src/services/workflowDefinitions.js` discovers this `workflow` key
+the same way `modules/syncPermissions.js` discovers `permissions` — no
+registration step beyond adding the key. Core (non-module) entities that
+need a workflow declare it in `backend/src/config/coreWorkflowDefinitions.js`
+instead, mirroring `coreMenu.js`.
+
+Use `backend/src/services/workflowService.js` in your controller to enforce
+it:
+
+- `assertValidTransition(entityType, currentState, newState, actor)` — throws
+  `ApiError.badRequest('Invalid transition')` if `from`→`to` isn't declared,
+  or `ApiError.forbidden(...)` if `actor.permissions` (an array of
+  permission keys — e.g. `req.user.permissions`, populated by the
+  `authorize` middleware) doesn't include the transition's `permission`.
+  Call this before persisting a state change.
+- `isValidState(entityType, state)` — `true`/`false`. Useful in a Zod
+  `.refine()` on the `to` field of your transition validator, so an
+  unrecognized state is rejected as `400` before it reaches the controller.
+- `availableTransitions(entityType, currentState, actor)` — the list of
+  `to` states `actor` is currently permitted to move to. Useful for a
+  "what can I do next" endpoint or for the frontend to render only the
+  transitions a user can actually perform.
+
+See `backend/modules/example-approvals/` for a complete worked example
+(config, migration, repository, controller, routes, tests) using all three
+functions.
+
 ## Routes → controllers → services
 
 Follow `user.routes.js`'s pattern, not `lead.controller.js`'s:
