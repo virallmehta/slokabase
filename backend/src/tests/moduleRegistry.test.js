@@ -3,7 +3,7 @@ import modules from '#modules/index.js';
 
 describe('Module registry (backend/modules/index.js)', () => {
   it('auto-discovers every self-contained module directory', () => {
-    expect(modules.map((m) => m.key).sort()).toEqual(['example-products', 'example-sales']);
+    expect(modules.map((m) => m.key).sort()).toEqual(['example-approvals', 'example-products', 'example-sales']);
   });
 
   it('each module exposes the required shape', () => {

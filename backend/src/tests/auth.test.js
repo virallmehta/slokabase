@@ -30,7 +30,7 @@ describe('Authentication API Integration Tests', () => {
     expect(res.body.user.email).toBe(testUser.email);
     expect(res.body.user).not.toHaveProperty('password_hash');
     expect(res.body.user.role).toBe('member');
-    expect(res.body.user.permissions).toEqual([]);
+    expect(res.body.user.permissions).toEqual(['example-approvals:read']);
   });
 
   it('POST /api/v1/auth/register should block duplicate email registers', async () => {

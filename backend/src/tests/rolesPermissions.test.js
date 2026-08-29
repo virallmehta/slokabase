@@ -103,18 +103,20 @@ describe('Roles & Permissions module — /api/v1/admin/roles', () => {
     const res = await adminAgent.get(`/api/v1/admin/roles/${memberRoleId}/permissions`).expect(200);
 
     const moduleNames = res.body.groups.map((g) => g.module).sort();
-    expect(moduleNames).toEqual(['Audit', 'Example Products', 'Example Sales', 'Roles', 'Settings', 'Users']);
+    expect(moduleNames).toEqual(['Audit', 'Example Approvals', 'Example Products', 'Example Sales', 'Roles', 'Settings', 'Users']);
 
-    // member starts with no permissions granted at all
+    // member starts with no permissions granted except example-approvals:read,
+    // its one default module grant (see modules/example-approvals/config.js)
     const allPermissions = res.body.groups.flatMap((g) => g.permissions);
-    expect(allPermissions.every((p) => p.granted === false)).toBe(true);
+    const grantedKeys = allPermissions.filter((p) => p.granted).map((p) => p.key);
+    expect(grantedKeys).toEqual(['example-approvals:read']);
   });
 
   it('gets the permission catalog with everything unchecked, for the New role form', async () => {
     const res = await adminAgent.get('/api/v1/admin/roles/permissions/catalog').expect(200);
 
     const moduleNames = res.body.groups.map((g) => g.module).sort();
-    expect(moduleNames).toEqual(['Audit', 'Example Products', 'Example Sales', 'Roles', 'Settings', 'Users']);
+    expect(moduleNames).toEqual(['Audit', 'Example Approvals', 'Example Products', 'Example Sales', 'Roles', 'Settings', 'Users']);
 
     const allPermissions = res.body.groups.flatMap((g) => g.permissions);
     expect(allPermissions.every((p) => p.granted === false)).toBe(true);

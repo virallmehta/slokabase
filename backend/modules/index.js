@@ -1,6 +1,7 @@
 import { readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { setModules } from '#services/workflowDefinitions.js';
 
 /**
  * Runtime module registry — plug-and-play modular architecture.
@@ -33,5 +34,7 @@ const modules = await Promise.all(
     return { ...config, routes };
   })
 );
+
+setModules(modules);
 
 export default modules;
