@@ -47,12 +47,13 @@ describe('GET /api/menu', () => {
         items: [
           expect.objectContaining({ key: 'example-products', label: 'Example Products', order: 10 }),
           expect.objectContaining({ key: 'example-sales', label: 'Example Sales', order: 20 }),
+          expect.objectContaining({ key: 'example-approvals', label: 'Example Approvals', order: 30 }),
         ],
       },
     ]);
   });
 
-  it('returns an empty menu for a member with no module permissions', async () => {
+  it('returns only the Example Approvals menu entry for a member (its only default module permission)', async () => {
     const agent = request.agent(app);
     await agent
       .post('/api/v1/auth/login')
@@ -60,7 +61,12 @@ describe('GET /api/menu', () => {
       .expect(200);
 
     const res = await agent.get('/api/menu').expect(200);
-    expect(res.body.menu).toEqual([]);
+    expect(res.body.menu).toEqual([
+      {
+        group: 'Catalog',
+        items: [expect.objectContaining({ key: 'example-approvals' })],
+      },
+    ]);
   });
 
   it('includes the Roles and Settings menu entries for a demo-role user', async () => {
@@ -94,7 +100,10 @@ describe('GET /api/menu', () => {
     expect(res.body.menu).toEqual([
       {
         group: 'Catalog',
-        items: [expect.objectContaining({ key: 'example-products' })],
+        items: [
+          expect.objectContaining({ key: 'example-products' }),
+          expect.objectContaining({ key: 'example-approvals' }),
+        ],
       },
     ]);
   });

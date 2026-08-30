@@ -42,6 +42,10 @@ const managerPermissionKeys = [
   ...baseRolePermissions.manager,
   ...modules.flatMap((mod) => mod.rolePermissions.manager),
 ].sort();
+const memberPermissionKeys = [
+  ...baseRolePermissions.member,
+  ...modules.flatMap((mod) => mod.rolePermissions.member),
+].sort();
 // The demo role's grants aren't derived from baseRolePermissions/modules
 // (see the comment in db/seeds/00_roles_permissions.js) — mirror that
 // curated list here so this test stays in sync with the seed.
@@ -54,7 +58,10 @@ const demoPermissionKeys = [
   'example-sales:read',
 ].sort();
 const totalMappingCount =
-  adminPermissionKeys.length + managerPermissionKeys.length + demoPermissionKeys.length;
+  adminPermissionKeys.length +
+  managerPermissionKeys.length +
+  memberPermissionKeys.length +
+  demoPermissionKeys.length;
 
 describe('Roles & permissions schema/seed data', () => {
   beforeAll(async () => {
@@ -85,7 +92,7 @@ describe('Roles & permissions schema/seed data', () => {
 
     expect((await permissionsFor('admin')).sort()).toEqual(adminPermissionKeys);
     expect((await permissionsFor('manager')).sort()).toEqual(managerPermissionKeys);
-    expect(await permissionsFor('member')).toEqual([]);
+    expect((await permissionsFor('member')).sort()).toEqual(memberPermissionKeys);
   });
 
   it('users table has role_id (FK) instead of the old role string column', async () => {

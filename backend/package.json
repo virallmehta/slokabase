@@ -21,6 +21,7 @@
     "migrate": "knex migrate:latest && node modules/migrate.js migrate",
     "migrate:rollback": "node modules/migrate.js rollback && knex migrate:rollback",
     "migrate:make": "knex migrate:make",
+    "module:migrate:make": "node scripts/makeModuleMigration.js",
     "seed": "knex seed:run && node modules/migrate.js seed",
     "sync-permissions": "node scripts/syncPermissions.js",
     "lint": "eslint .",
